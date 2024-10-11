@@ -1,4 +1,4 @@
-  enum availableResolutions {
+enum availableResolutions {
     "P144",
     "P240",
     "P360",
@@ -8,6 +8,7 @@
     "P1440",
     "P2160"
 }
+
 
 export type videoType = {
     id: number,

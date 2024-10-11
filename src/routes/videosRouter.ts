@@ -3,8 +3,6 @@ import {availableResolutions, db} from "../db/db";
 import {OutputErrorsType, OutputType, videosInputType} from "../videos/videosType";
 
 
-
-
 export const videosRouter = Router({})
 
 videosRouter.get('/', (req: Request, res: Response<OutputType>) => {
@@ -23,7 +21,7 @@ videosRouter.get('/:id', (req: Request, res: Response<OutputType>) => {
 
 })
 
-videosRouter.post('/', (req: Request<{},{},videosInputType>, res: Response<OutputType>) => {
+videosRouter.post('/', (req: Request<{}, {}, videosInputType>, res: Response<OutputType>) => {
     const errors: OutputErrorsType = {
         errorsMessages: []
     }
@@ -39,15 +37,21 @@ videosRouter.post('/', (req: Request<{},{},videosInputType>, res: Response<Outpu
     }
 
     if (Array.isArray(req.body.availableResolutions)) {
-        req.body.availableResolutions.forEach((el:any ) => {
-            if (availableResolutions.includes(el)){
+        req.body.availableResolutions.forEach((el: any) => {
+            if (availableResolutions.includes(el)) {
 
-            }else{
+            } else {
                 errors.errorsMessages.push({
                     message: 'incorrect availableResolutions value', field: 'availableResolutions'
                 })
             }
-                })
+        })
+    }
+
+    if(req.body.availableResolutions.length ===0){
+        errors.errorsMessages.push({
+            message: 'incorrect availableResolutions value', field: 'availableResolutions'
+        })
     }
 
     if (errors.errorsMessages.length) {
@@ -71,9 +75,59 @@ videosRouter.post('/', (req: Request<{},{},videosInputType>, res: Response<Outpu
     res.status(201).json(newProduct)
 })
 
-videosRouter.put('/:id', (req:Request<{id:string},{},videosInputType>, res: Response<OutputType>) => {
+videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res: Response<OutputType>) => {
+
+    const errors: OutputErrorsType = {
+        errorsMessages: []
+    }
+    if (!req.body.title || !req.body.title.trim().length || req.body.title.trim().length > 40) {
+        errors.errorsMessages.push({
+            message: 'incorrect title value', field: 'title'
+        })
+    }
+    if (!req.body.author || !req.body.author.trim().length || req.body.author.trim().length > 20) {
+        errors.errorsMessages.push({
+            message: 'incorrect author value', field: 'author'
+        })
+    }
+    if (!req.body.canBeDownloaded || typeof req.body.canBeDownloaded !== "boolean") {
+        errors.errorsMessages.push({
+            message: 'incorrect author canBeDownloaded', field: 'canBeDownloaded'
+        })
+    }
+
+    if (!req.body.minAgeRestriction || req.body.minAgeRestriction > 18 || typeof req.body.minAgeRestriction !== "number") {
+        errors.errorsMessages.push({
+            message: 'incorrect minAgeRestriction value', field: 'minAgeRestriction'
+        })
+    }
+
+    if (Array.isArray(req.body.availableResolutions)) {
+        req.body.availableResolutions.forEach((el: any) => {
+            if (availableResolutions.includes(el)) {
+
+            } else {
+                errors.errorsMessages.push({
+                    message: 'incorrect availableResolutions value', field: 'availableResolutions'
+                })
+            }
+        })
+    }
+
+    if(req.body.availableResolutions.length ===0){
+        errors.errorsMessages.push({
+            message: 'incorrect availableResolutions value', field: 'availableResolutions'
+        })
+    }
+
+    if (errors.errorsMessages.length) {
+        res.status(400).json(errors)
+        return
+    }
+
+
     let id = +req.params.id
-    let {title, author, availableResolutions, canBeDownloaded, minAgeRestriction} = req.body
+    let {title, author, canBeDownloaded, minAgeRestriction} = req.body
     let product = db.videos.find(p => p.id === id)
     if (product) {
 
@@ -82,7 +136,7 @@ videosRouter.put('/:id', (req:Request<{id:string},{},videosInputType>, res: Resp
         product.canBeDownloaded = canBeDownloaded
         product.minAgeRestriction = minAgeRestriction
         product.publicationDate = new Date().toISOString()
-        product.availableResolutions = availableResolutions
+        product.availableResolutions = req.body.availableResolutions
 
         res.sendStatus(204)
 

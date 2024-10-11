@@ -8,6 +8,7 @@ export const db: DBType = {
     videos: [],
 }
 
+export type availableResolutionsType = typeof availableResolutions
 export const availableResolutions = ["P144",
     "P240",
     "P360",

@@ -1,5 +1,6 @@
 import {Request, Response} from 'express'
 import {videoType} from "../db/dbType";
+import {availableResolutionsType} from "../db/db";
 
 
 enum availableResolutions {
@@ -11,6 +12,11 @@ enum availableResolutions {
     "P1080",
     "P1440",
     "P2160"
+}
+export type inputVideoType ={
+    title:string
+    author:string
+    availableResolutions:availableResolutionsType
 }
 
 export type ParamType = {
