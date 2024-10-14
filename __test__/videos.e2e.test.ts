@@ -1,7 +1,7 @@
 import {req} from './test-helpers'
 import {HTTP_STATUSES, SETTINGS} from '../src/settings'
-import {availableResolutionsType, setDB} from "../src/db/db";
-import {inputVideoType, videosInputType} from "../src/videos/videosType";
+import {setDB} from "../src/db/db";
+import {inputVideoType} from "../src/videos/videosType";
 
 describe(SETTINGS.PATH.VIDEOS, () => {
     beforeAll(async () => { // очистка базы данных перед началом тестирования
@@ -17,7 +17,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
         console.log(res.body) // можно посмотреть ответ эндпоинта
 
-        // expect(res.body.length).toBe(0) // проверяем ответ эндпоинта
+         expect(res.body.length).toBe(0) // проверяем ответ эндпоинта
     })
     it('should get not empty array', async () => {
         let dataset1 = {
@@ -351,6 +351,87 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         const put = await req
             .put(SETTINGS.PATH.VIDEOS +'/' + '1')
             .send(updateVideo)
+            .expect(HTTP_STATUSES.NOT_FOUNT_404)
+
+
+    })
+})
+
+describe(SETTINGS.PATH.VIDEOS, () => {
+    // удаление (delete)
+
+    /* beforeAll(async () => { // очистка базы данных перед началом тестирования
+         setDB()
+     })*/
+
+    it('delete video', async () => {
+
+        setDB()
+
+        const get = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(get.body)
+
+        expect(get.body.length).toBe(0)
+
+
+
+        const newVideo: inputVideoType /*InputVideoType*/ = {
+            title: 't1',
+            author: 'a1',
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+            // ...
+        }
+
+        const post = await req
+            .post(SETTINGS.PATH.VIDEOS)
+            .send(newVideo) // отправка данных
+            .expect(HTTP_STATUSES.CREATED_201)
+
+        console.log(post.body)
+
+        expect(post.body.availableResolutions).toEqual(newVideo.availableResolutions)
+        expect(post.body.title).toEqual(newVideo.title)
+
+        const get2 = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        expect(get2.body.length).toBe(1)
+        expect(get2.body[0].title).toEqual(newVideo.title)
+
+        const deleteVideo = await req
+            .delete(SETTINGS.PATH.VIDEOS  +'/' + String(get2.body[0].id))
+            .expect(HTTP_STATUSES.NO_CONTEND_204)
+
+    const get3 = await req
+        .get(SETTINGS.PATH.VIDEOS)
+        .expect(HTTP_STATUSES.OK_200)
+
+
+        expect(get3.body.length).toBe(0)
+    })
+
+
+
+
+
+    it('no right Id', async () => {
+
+        setDB()
+
+        const get = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+
+        expect(get.body.length).toBe(0)
+
+
+        const deleteVideo = await req
+            .delete(SETTINGS.PATH.VIDEOS +'/' + '1')
             .expect(HTTP_STATUSES.NOT_FOUNT_404)
 
 
