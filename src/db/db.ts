@@ -1,11 +1,22 @@
-import {videoType} from "./dbType";
+import {blogsType, postType, videoType} from "./dbType";
 
 export type DBType = {
     videos: videoType[]
+    blogs: blogsType[]
+    posts: postType[]
+}
+
+export type ReadonlyDBType = { // тип для dataset
+    blogs: Readonly<blogsType[]>
+    posts: Readonly<postType[]>
+    videos: Readonly<videoType[]>
+    // some: any[]
 }
 
 export const db: DBType = {
     videos: [],
+    blogs: [],
+    posts: []
 }
 
 export type availableResolutionsType = typeof availableResolutions
@@ -18,14 +29,17 @@ export const availableResolutions = ["P144",
     "P1440",
     "P2160"]
 // функция для быстрой очистки/заполнения базы данных для тестов
-export const setDB = (dataset?: Partial<DBType>) => {
+export const setDB = (dataset?: Partial<ReadonlyDBType>) => {
     if (!dataset) { // если в функцию ничего не передано - то очищаем базу данных
+        db.blogs = []
+        db.posts = []
         db.videos = []
-        // db.some = []
         return
     }
 
     // если что-то передано - то заменяем старые значения новыми
-    db.videos = dataset.videos || db.videos
-    // db.some = dataset.some || db.some
+    db.blogs = dataset.blogs?.map(b => ({...b})) || db.blogs
+    db.posts = dataset.posts?.map(p => ({...p})) || db.posts
+    db.videos = dataset.videos?.map(v => ({...v})) || db.videos
+
 }

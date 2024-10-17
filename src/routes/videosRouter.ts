@@ -1,18 +1,18 @@
 import {Request, Response, Router} from "express";
 import {availableResolutions, db} from "../db/db";
-import {OutputErrorsType, OutputType, videosInputType} from "../videos/videosType";
+import {OutputErrorsType, OutputType, videosInputType} from "../types/videosType";
+import {videoRepository} from "../repositories/video-repository";
 
 
 export const videosRouter = Router({})
 
 videosRouter.get('/', (req: Request, res: Response<OutputType>) => {
 
-    res.status(200).json(db.videos)
+    res.status(200).json(videoRepository.getAllVideo())
 })
 
 videosRouter.get('/:id', (req: Request, res: Response<OutputType>) => {
-    let id = +req.params.id
-    let product = db.videos.find(p => p.id === id)
+    let product = videoRepository.findVideoById(+req.params.id)
     if (product) {
         res.status(200).json(product)
     } else {
@@ -48,7 +48,7 @@ videosRouter.post('/', (req: Request<{}, {}, videosInputType>, res: Response<Out
         })
     }
 
-    if(req.body.availableResolutions.length ===0){
+    if (req.body.availableResolutions.length === 0) {
         errors.errorsMessages.push({
             message: 'incorrect availableResolutions value', field: 'availableResolutions'
         })
@@ -58,21 +58,14 @@ videosRouter.post('/', (req: Request<{}, {}, videosInputType>, res: Response<Out
         res.status(400).json(errors)
         return
     }
-    let today = new Date()
-    let tomorrow = new Date()
-    tomorrow.setDate(today.getDate() + 1)
-    const newProduct = {
-        id: +(new Date()),
+
+    let newVideoData = {
         title: req.body.title,
         author: req.body.author,
-        canBeDownloaded: false,
-        minAgeRestriction: null,
-        createdAt: today.toISOString(),
-        publicationDate: tomorrow.toISOString(),
         availableResolutions: req.body.availableResolutions
     }
-    db.videos.push(newProduct)
-    res.status(201).json(newProduct)
+    const createdVideo = videoRepository.createdVideo(newVideoData)
+    res.status(201).json(createdVideo)
 })
 
 videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res: Response<OutputType>) => {
@@ -104,9 +97,7 @@ videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res
 
     if (Array.isArray(req.body.availableResolutions)) {
         req.body.availableResolutions.forEach((el: any) => {
-            if (availableResolutions.includes(el)) {
-
-            } else {
+            if (!availableResolutions.includes(el)) {
                 errors.errorsMessages.push({
                     message: 'incorrect availableResolutions value', field: 'availableResolutions'
                 })
@@ -114,7 +105,7 @@ videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res
         })
     }
 
-    if(req.body.availableResolutions.length ===0){
+    if (req.body.availableResolutions.length === 0) {
         errors.errorsMessages.push({
             message: 'incorrect availableResolutions value', field: 'availableResolutions'
         })
@@ -125,37 +116,36 @@ videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res
         return
     }
 
-
-    let id = +req.params.id
     let {title, author, canBeDownloaded, minAgeRestriction} = req.body
-    let product = db.videos.find(p => p.id === id)
-    if (product) {
 
-        product.title = title
-        product.author = author
-        product.canBeDownloaded = canBeDownloaded
-        product.minAgeRestriction = minAgeRestriction
-        product.publicationDate = new Date().toISOString()
-        product.availableResolutions = req.body.availableResolutions
+    const updateDataVideo = {
+        title,
+        author,
+        canBeDownloaded,
+        minAgeRestriction,
+        availableResolutions:req.body.availableResolutions // !!!
+    }
+    const isUpdated = videoRepository.updateVideo(+req.params.id, updateDataVideo)
+
+    if (isUpdated) {
 
         res.sendStatus(204)
 
     } else {
         res.sendStatus(404)
+
     }
 })
 
 videosRouter.delete('/:id', (req: Request, res: Response<OutputType>) => {
-    for (let i = 0; i < db.videos.length; i++) {
-        if (db.videos[i].id === +req.params.id) {
-            db.videos.splice(i, 1);
-            res.sendStatus(204)
-            return
-        }
 
+    const isDeleted = videoRepository.deleteVideo(+req.params.id)
+
+    if (isDeleted) {
+        res.sendStatus(204)
+    } else {
+        res.sendStatus(404)
     }
-
-    res.sendStatus(404)
 
 })
 

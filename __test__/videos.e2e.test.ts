@@ -1,7 +1,7 @@
 import {req} from './test-helpers'
 import {HTTP_STATUSES, SETTINGS} from '../src/settings'
 import {setDB} from "../src/db/db";
-import {inputVideoType} from "../src/videos/videosType";
+import {inputVideoType} from "../src/types/videosType";
 
 describe(SETTINGS.PATH.VIDEOS, () => {
     beforeAll(async () => { // очистка базы данных перед началом тестирования

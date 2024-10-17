@@ -40,6 +40,12 @@ export type videosInputType = {
     minAgeRestriction: number
 }
 
+export type newVideoCreatedDataType ={
+    title: string
+    author: string
+    availableResolutions: Array<availableResolutions>
+}
+
 
 export type OutputErrorsType = {
     errorsMessages: Array<
