@@ -1,51 +1,74 @@
-import {db} from "../db/db";
-import {blogInputPostDat, blogInputData} from "../types/blogType";
+import {blogInputData, blogInputPostDat} from "../types/blogType";
+import {blogsCollection} from "../db/dbInMongo";
+import {blogsDBType, blogsType} from "../db/dbType";
 
 
 export const blogsRepository = {
-    getAllBlogs() {
-
-        return db.blogs
+    async getAllBlogs(): Promise<blogsType[]> {
+        const blogs = await blogsCollection.find().toArray()
+        return this._blogMapping(blogs)
     },
-    findBlogById(id: string) {
-        return db.blogs.find(b => b.id === id)
+    async findBlogById(id: string): Promise<blogsType | null> {
+        const blog = await blogsCollection.findOne({id: id})
+        if (blog) {
+            return {
+                id: blog.id,
+                name: blog.name,
+                description: blog.description,
+                websiteUrl: blog.websiteUrl,
+                createdAt: blog.createdAt,
+                isMembership: blog.isMembership
+            }
+        } else {
+            return null
+        }
     },
-    createdBlog(newBlogCreatedData: blogInputPostDat) {
+    async createdBlog(newBlogCreatedData: blogInputPostDat): Promise<blogsType> {
 
         let {name, description, websiteUrl} = newBlogCreatedData
 
         const newBlog = {
             id: String(+(new Date())),
+            createdAt: new Date().toISOString(),
+            isMembership: false,
+            name,
+            description,
+            websiteUrl,
+        }
+        const result = await blogsCollection.insertOne(newBlog)
+        // @ts-ignore
+        delete newBlog._id
+        return newBlog
+    },
+    async updateBlog(blogId: string, updateVideoData: blogInputData): Promise<boolean> {
+        const {name, description, websiteUrl} = updateVideoData
+
+        const updateBlog = {
             name,
             description,
             websiteUrl
-
         }
-        db.blogs.push(newBlog)
-        return newBlog
+
+        const result = await blogsCollection.updateOne({id: blogId}, {$set: updateBlog})
+
+        return result.matchedCount === 1
     },
-    updateBlog(blogId: string, updateVideoData: blogInputData) {
-        const blog = this.findBlogById(blogId)
-        if (blog) {
-            blog.name = updateVideoData.name
-            blog.description = updateVideoData.description
-            blog.websiteUrl = updateVideoData.websiteUrl
+    async deleteBlog(id: string): Promise<boolean> {
+        const result = await blogsCollection.deleteOne({id: id})
+        return result.deletedCount === 1
 
-            return true
-        } else {
-            return false
-        }
     },
-    deleteBlog(id: string) {
-
-        for (let i = 0; i < db.blogs.length; i++) {
-            if (db.blogs[i].id === id) {
-                db.blogs.splice(i, 1);
-                return true
-            }
-        }
-            return false
-
+    async _blogMapping(array: blogsDBType[]): Promise<blogsType[]> {
+        return array.map((blog) => {
+            return {
+                id: blog.id,
+                name: blog.name,
+                description: blog.description,
+                websiteUrl: blog.websiteUrl,
+                createdAt: blog.createdAt,
+                isMembership: blog.isMembership
+            };
+        });
     }
 
 }

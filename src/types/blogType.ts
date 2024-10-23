@@ -6,12 +6,14 @@ export type blogInputPostDat = {
     name: string
     description: string
     websiteUrl: string
+
 }
 
 export type blogInputData = {
     name: string
     description:string
     websiteUrl:string
+
 }
 
 export type PostInputModel = {

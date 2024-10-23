@@ -1,18 +1,17 @@
 import {Request, Response, Router} from "express";
-import {availableResolutions, db} from "../db/db";
+import {availableResolutions} from "../db/db";
 import {OutputErrorsType, OutputType, videosInputType} from "../types/videosType";
 import {videoRepository} from "../repositories/video-repository";
 
 
 export const videosRouter = Router({})
 
-videosRouter.get('/', (req: Request, res: Response<OutputType>) => {
-
-    res.status(200).json(videoRepository.getAllVideo())
+videosRouter.get('/', async (req: Request, res: Response<OutputType>) => {
+    res.status(200).json(await videoRepository.getAllVideo())
 })
 
-videosRouter.get('/:id', (req: Request, res: Response<OutputType>) => {
-    let product = videoRepository.findVideoById(+req.params.id)
+videosRouter.get('/:id', async (req: Request, res: Response<OutputType>) => {
+    let product = await videoRepository.findVideoById(+req.params.id)
     if (product) {
         res.status(200).json(product)
     } else {
@@ -21,7 +20,7 @@ videosRouter.get('/:id', (req: Request, res: Response<OutputType>) => {
 
 })
 
-videosRouter.post('/', (req: Request<{}, {}, videosInputType>, res: Response<OutputType>) => {
+videosRouter.post('/', async (req: Request<{}, {}, videosInputType>, res: Response<OutputType>) => {
     const errors: OutputErrorsType = {
         errorsMessages: []
     }
@@ -64,11 +63,11 @@ videosRouter.post('/', (req: Request<{}, {}, videosInputType>, res: Response<Out
         author: req.body.author,
         availableResolutions: req.body.availableResolutions
     }
-    const createdVideo = videoRepository.createdVideo(newVideoData)
+    const createdVideo = await videoRepository.createdVideo(newVideoData)
     res.status(201).json(createdVideo)
 })
 
-videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res: Response<OutputType>) => {
+videosRouter.put('/:id', async (req: Request<{ id: string }, {}, videosInputType>, res: Response<OutputType>) => {
 
     const errors: OutputErrorsType = {
         errorsMessages: []
@@ -123,9 +122,9 @@ videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res
         author,
         canBeDownloaded,
         minAgeRestriction,
-        availableResolutions:req.body.availableResolutions // !!!
+        availableResolutions: req.body.availableResolutions // !!!
     }
-    const isUpdated = videoRepository.updateVideo(+req.params.id, updateDataVideo)
+    const isUpdated = await videoRepository.updateVideo(+req.params.id, updateDataVideo)
 
     if (isUpdated) {
 
@@ -137,9 +136,9 @@ videosRouter.put('/:id', (req: Request<{ id: string }, {}, videosInputType>, res
     }
 })
 
-videosRouter.delete('/:id', (req: Request, res: Response<OutputType>) => {
+videosRouter.delete('/:id', async (req: Request, res: Response<OutputType>) => {
 
-    const isDeleted = videoRepository.deleteVideo(+req.params.id)
+    const isDeleted = await videoRepository.deleteVideo(+req.params.id)
 
     if (isDeleted) {
         res.sendStatus(204)

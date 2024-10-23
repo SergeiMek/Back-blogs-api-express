@@ -1,62 +1,88 @@
-import {db} from "../db/db";
-import {blogInputPostDat, blogInputData} from "../types/blogType";
 import {postsInoutData} from "../types/postType";
 import {blogsRepository} from "./blogs-repository";
+import {postDBType, postType} from "../db/dbType";
+import {postsCollection} from "../db/dbInMongo";
 
 
 export const postsRepository = {
-    getAllPosts() {
+    async getAllPosts(): Promise<postType[]> {
+        const posts = await postsCollection.find().toArray()
+        return this._postMapping(posts)
+    },
+    async findPostById(id: string): Promise<postType | null> {
+        const post = await postsCollection.findOne({id: id})
 
-        return db.posts
+        if (post) {
+            return {
+                id: post.id,
+                title: post.title,
+                shortDescription: post.shortDescription,
+                content: post.content,
+                blogId: post.blogId,
+                blogName: post.blogName,
+                createdAt: post.createdAt
+            }
+        } else {
+            return null
+        }
     },
-    findPostById(id: string) {
-        return db.posts.find(b => b.id === id)
-    },
-    createdPost(newPostCreatedData: postsInoutData) {
+    async createdPost(newPostCreatedData: postsInoutData): Promise<postType> {
 
         let {title, shortDescription, content, blogId} = newPostCreatedData
 
-        const blog = blogsRepository.findBlogById(blogId)
-        if (blog) {
-            const newPost = {
-                id: String(+(new Date())),
-                title,
-                shortDescription,
-                content,
-                blogId,
-                blogName: blog.name
-            }
-            db.posts.push(newPost)
-            return newPost
+        const blog = await blogsRepository.findBlogById(blogId)
+
+        const newPost = {
+            id: String(+(new Date())),
+            createdAt: new Date().toISOString(),
+            title,
+            shortDescription,
+            content,
+            blogId,
+            blogName: blog!.name
         }
-        return
+
+        const result = await postsCollection.insertOne(newPost)
+        // @ts-ignore
+        delete newPost._id
+
+        return newPost
+
+
     },
-    updatePost(postId: string, updatePostData: postsInoutData) {
+    async updatePost(postId: string, updatePostData: postsInoutData): Promise<boolean> {
 
         let {title, shortDescription, content, blogId} = updatePostData
-        const blog = blogsRepository.findBlogById(blogId)
-        const post = this.findPostById(postId)
-        if (post) {
-            post.title = title
-            post.shortDescription = shortDescription
-            post.content = content
-            post.blogId = blogId
-            post.blogName = blog ? blog.name : ''
-            return true
-        } else {
-            return false
+        //const blog = await blogsRepository.findBlogById(blogId)
+
+        const updatePost = {
+            title: title,
+            shortDescription: shortDescription,
+            content: content,
+            blogId: blogId,
+            //blogName: blog?.name
         }
+        const result = await postsCollection.updateOne({id: postId}, {$set: updatePost})
+        return result.matchedCount === 1
     },
-    deletePost(id: string) {
+    async deletePost(id: string): Promise<boolean> {
+        const result = await postsCollection.deleteOne({id: id})
 
-        for (let i = 0; i < db.posts.length; i++) {
-            if (db.posts[i].id === id) {
-                db.posts.splice(i, 1);
-                return true
-            }
-        }
-        return false
+        return result.deletedCount === 1
 
+    },
+    async _postMapping(array: postDBType[]): Promise<postType[]> {
+        return array.map((post) => {
+            return {
+                id: post.id,
+                title: post.title,
+                shortDescription: post.shortDescription,
+                content: post.content,
+                blogId: post.blogId,
+                blogName: post.blogName,
+                createdAt: post.createdAt
+            };
+        });
     }
 
 }

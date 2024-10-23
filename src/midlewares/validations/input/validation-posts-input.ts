@@ -4,8 +4,8 @@ import {blogsRepository} from "../../../repositories/blogs-repository";
 
 
 export const validationPostsCreationCustom = body("blogId").isString().withMessage('not string')
-    .trim().custom((value) => {
-        const blog = blogsRepository.findBlogById(value);
+    .trim().custom(async (value) => {
+        const blog =await blogsRepository.findBlogById(value);
         if (!blog) {
             throw new Error("Blog with provided ID not found");
         }

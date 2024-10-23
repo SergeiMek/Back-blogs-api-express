@@ -9,7 +9,9 @@ export const SETTINGS = {
         BLOGS: '/blogs',
         POSTS: '/posts'
     },
-    ADMIN: process.env.ADMIN || 'admin:qwerty'
+    ADMIN: process.env.ADMIN || 'admin:qwerty',
+    DB_NAME:process.env.DB_NAME,
+    MONGO_URL:process.env.MONGO_URL || ' '
 }
 
 export const HTTP_STATUSES = {
