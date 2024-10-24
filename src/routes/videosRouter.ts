@@ -24,11 +24,15 @@ videosRouter.post('/', async (req: Request<{}, {}, videosInputType>, res: Respon
     const errors: OutputErrorsType = {
         errorsMessages: []
     }
-    if (!req.body.title || !req.body.title.trim().length || req.body.title.trim().length > 40) {
+
+    if (!req.body.title || !req.body.title.trim().length || req.body.title.trim().length > 40 ) {
         errors.errorsMessages.push({
             message: 'incorrect title value', field: 'title'
         })
     }
+
+
+
     if (!req.body.author || !req.body.author.trim().length || req.body.author.trim().length > 20) {
         errors.errorsMessages.push({
             message: 'incorrect author value', field: 'author'

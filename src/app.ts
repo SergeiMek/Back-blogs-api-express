@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import {SETTINGS} from "./settings";
 import {videosRouter} from "./routes/videosRouter";
-import {setDB} from "./db/db";
+import {deleteDB} from "./db/db";
 import {blogsRouter} from "./routes/blogs-router";
 import {postsRouter} from "./routes/posts-router";
 
@@ -13,7 +13,7 @@ app.use(cors())
 app.use(SETTINGS.PATH.VIDEOS, videosRouter)
 app.use(SETTINGS.PATH.BLOGS, blogsRouter)
 app.use(SETTINGS.PATH.POSTS, postsRouter)
-app.delete('/testing/all-data', (req, res) => {
-    setDB()
+app.delete('/testing/all-data', async (req, res) => {
+    await deleteDB()
     res.sendStatus(204)
 })

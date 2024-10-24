@@ -8,7 +8,7 @@ import Document from "mongodb";
 export const videoRepository = {
     async getAllVideo(): Promise<videoType[]> {
         //return db.videos
-        const videos = await videosCollection.find({}).toArray()
+        const videos = await videosCollection.find({}).toArray()    ///// {projection:{_id:0}} скрыть _id
         return this._videoMapping(videos)
     },
     async findVideoById(id: number): Promise<videoType | null> {

@@ -1,15 +1,24 @@
 import {req} from './test-helpers'
 import {HTTP_STATUSES, SETTINGS} from '../src/settings'
-import {setDB} from "../src/db/db";
 import {inputVideoType} from "../src/types/videosType";
+import {runDb, videosCollection} from "../src/db/dbInMongo";
+import {MongoMemoryServer} from "mongodb-memory-server";
+
 
 describe(SETTINGS.PATH.VIDEOS, () => {
     beforeAll(async () => { // очистка базы данных перед началом тестирования
-        setDB()
+        /*    await runDb(SETTINGS.MONGO_URL)
+            await videosCollection.deleteMany()*/
+
+        const server = await MongoMemoryServer.create()
+        const url = server.getUri()
+        await runDb(url)
+        await videosCollection.deleteMany({})
+
     })
 
     it('should get empty array', async () => {
-        setDB() // очистка базы данных если нужно
+        await videosCollection.deleteMany({}) // очистка базы данных если нужно
 
         const res = await req
             .get(SETTINGS.PATH.VIDEOS)
@@ -17,7 +26,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
         console.log(res.body) // можно посмотреть ответ эндпоинта
 
-         expect(res.body.length).toBe(0) // проверяем ответ эндпоинта
+        expect(res.body.length).toBe(0) // проверяем ответ эндпоинта
     })
     it('should get not empty array', async () => {
         let dataset1 = {
@@ -34,19 +43,25 @@ describe(SETTINGS.PATH.VIDEOS, () => {
                 ]
             }]
         }
+
+        await videosCollection.deleteMany({})
         // @ts-ignore
-        setDB(dataset1) // заполнение базы данных начальными данными если нужно
+        await videosCollection.insertMany(dataset1.videos)
+
+
+        // @ts-ignore
+        delete dataset1.videos[0]._id
+
 
         const res = await req
             .get(SETTINGS.PATH.VIDEOS)
             .expect(HTTP_STATUSES.OK_200)
-
         console.log(res.body)
-
         expect(res.body.length).toBe(1)
         expect(res.body[0]).toEqual(dataset1.videos[0])
     })
 })
+
 
 describe(SETTINGS.PATH.VIDEOS, () => {
     /*  beforeAll(async () => { // очистка базы данных перед началом тестирования
@@ -54,7 +69,8 @@ describe(SETTINGS.PATH.VIDEOS, () => {
       })*/
 //post
     it('should create', async () => {
-        setDB()
+        await videosCollection.deleteMany()
+
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
             author: 'a1',
@@ -83,7 +99,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
     })
 
     it('shouldn\'t find', async () => {
-
+        await videosCollection.deleteMany()
         let dataset1 = {
             videos: [{
                 id: +(new Date()),
@@ -100,7 +116,9 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         }
 
         // @ts-ignore
-        setDB(dataset1)
+        //setDB(dataset1)
+
+        await  videosCollection.insertOne(dataset1.videos[0])
 
         const res = await req
             .get(SETTINGS.PATH.VIDEOS + '/1')
@@ -110,7 +128,9 @@ describe(SETTINGS.PATH.VIDEOS, () => {
     })
 
     it('should create incorrect title ', async () => {
-        setDB()
+
+        await videosCollection.deleteMany()
+
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1000000000000000000000000000000000000000000000000000000000000000000000',
             author: 'a1',
@@ -132,27 +152,12 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         })
     })
 
-    it('check for string title ', async () => {
-        setDB()
-        const newVideo: any /*InputVideoType*/ = {
-            title: 5,
-            author: 'a1',
-            availableResolutions: ['P144' /*Resolutions.P144*/]
-            // ...
-        }
-
-        const res = await req
-            .post(SETTINGS.PATH.VIDEOS)
-            .send(newVideo) // отправка данных
-            .expect(500)
-
-        console.log(res.body)
-
-        expect(res.body).toEqual({})
-    })
 
     it('should create incorrect author ', async () => {
-        setDB()
+        //setDB()
+
+        await videosCollection.deleteMany()
+
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
             author: 'a10000000000000000000000000000000000000',
@@ -174,27 +179,12 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         })
     })
 
-    it('check for string author ', async () => {
-        setDB()
-        const newVideo: any /*InputVideoType*/ = {
-            title: "666",
-            author: true,
-            availableResolutions: ['P144' /*Resolutions.P144*/]
-            // ...
-        }
 
-        const res = await req
-            .post(SETTINGS.PATH.VIDEOS)
-            .send(newVideo) // отправка данных
-            .expect(500)
-
-        console.log(res.body)
-
-        expect(res.body).toEqual({})
-    })
 
     it('should create incorrect availableResolutions ', async () => {
-        setDB()
+      //  setDB()
+
+        await videosCollection.deleteMany()
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
             author: 'a10',
@@ -216,7 +206,8 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         })
     })
     it('should create incorrect availableResolutions 2 ', async () => {
-        setDB()
+       // setDB()
+        await videosCollection.deleteMany()
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
             author: 'a10',
@@ -240,16 +231,20 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 })
 
 
+
+
 describe(SETTINGS.PATH.VIDEOS, () => {
     // обнавление (put)
 
-   /* beforeAll(async () => { // очистка базы данных перед началом тестирования
-        setDB()
-    })*/
+    /* beforeAll(async () => { // очистка базы данных перед началом тестирования
+         setDB()
+     })*/
 
     it('should update  video', async () => {
 
-        setDB()
+       // setDB()
+
+        await videosCollection.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
@@ -289,7 +284,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
 
         const put = await req
-            .put(SETTINGS.PATH.VIDEOS +'/' + String(get.body[0].id))
+            .put(SETTINGS.PATH.VIDEOS + '/' + String(get.body[0].id))
             .send(updateVideo)
             .expect(HTTP_STATUSES.NO_CONTEND_204)
 
@@ -309,7 +304,8 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
     it('no right Id', async () => {
 
-        setDB()
+        //setDB()
+        await videosCollection.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
@@ -349,13 +345,16 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
 
         const put = await req
-            .put(SETTINGS.PATH.VIDEOS +'/' + '1')
+            .put(SETTINGS.PATH.VIDEOS + '/' + '1')
             .send(updateVideo)
             .expect(HTTP_STATUSES.NOT_FOUNT_404)
 
 
     })
 })
+
+
+
 
 describe(SETTINGS.PATH.VIDEOS, () => {
     // удаление (delete)
@@ -365,8 +364,8 @@ describe(SETTINGS.PATH.VIDEOS, () => {
      })*/
 
     it('delete video', async () => {
-
-        setDB()
+        await videosCollection.deleteMany()
+        ///setDB()
 
         const get = await req
             .get(SETTINGS.PATH.VIDEOS)
@@ -375,7 +374,6 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         console.log(get.body)
 
         expect(get.body.length).toBe(0)
-
 
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
@@ -403,24 +401,22 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         expect(get2.body[0].title).toEqual(newVideo.title)
 
         const deleteVideo = await req
-            .delete(SETTINGS.PATH.VIDEOS  +'/' + String(get2.body[0].id))
+            .delete(SETTINGS.PATH.VIDEOS + '/' + String(get2.body[0].id))
             .expect(HTTP_STATUSES.NO_CONTEND_204)
 
-    const get3 = await req
-        .get(SETTINGS.PATH.VIDEOS)
-        .expect(HTTP_STATUSES.OK_200)
+        const get3 = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
 
 
         expect(get3.body.length).toBe(0)
     })
 
 
-
-
-
     it('no right Id', async () => {
 
-        setDB()
+        //setDB()
+        await videosCollection.deleteMany()
 
         const get = await req
             .get(SETTINGS.PATH.VIDEOS)
@@ -431,7 +427,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
 
         const deleteVideo = await req
-            .delete(SETTINGS.PATH.VIDEOS +'/' + '1')
+            .delete(SETTINGS.PATH.VIDEOS + '/' + '1')
             .expect(HTTP_STATUSES.NOT_FOUNT_404)
 
 

@@ -11,6 +11,28 @@ enum availableResolutions {
     "P2160"
 }
 
+/*
+const availableResolutions = ["P144",
+    "P240",
+    "P360",
+    "P480",
+    "P720",
+    "P1080",
+    "P1440",
+    "P2160"]
+*/
+/*
+
+type availableResolutions = Array<"P144" |
+    "P240" |
+    "P360" |
+    "P480" |
+    "P720" |
+    "P1080" |
+    "P1440" |
+    "P2160">
+
+*/
 
 export type videoType = {
     id: number,
@@ -20,7 +42,8 @@ export type videoType = {
     minAgeRestriction: number | null,
     createdAt: string,
     publicationDate: string,
-    availableResolutions: Array<availableResolutions>
+    availableResolutions:  Array<availableResolutions>
+
 
 }
 

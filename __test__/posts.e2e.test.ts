@@ -1,23 +1,45 @@
-import {db, setDB} from "../src/db/db";
-import {blogInputData} from "../src/types/blogType";
+import {db, deleteDB} from "../src/db/db";
 import {req} from "./test-helpers";
 import {SETTINGS} from "../src/settings";
-import {codedAuth, createString, dataset1, dataset2} from "./helpers/datasets";
+import {blog1, codedAuth, createString, dataset1, dataset2} from "./helpers/datasets";
 import {postsInoutData} from "../src/types/postType";
+import {MongoMemoryServer} from "mongodb-memory-server";
+import {blogsCollection, postsCollection, runDb} from "../src/db/dbInMongo";
+import {postsRepository} from "../src/repositories/posts-repository";
 
 
 describe('/posts', () => {
-    // beforeAll(async () => { // очистка базы данных перед началом тестирования
-    //     setDB()
-    // })
+    beforeAll(async () => { // очистка базы данных перед началом тестирования
+        const server = await MongoMemoryServer.create()
+        const url = server.getUri()
+        await runDb(url)
+        await blogsCollection.deleteMany({})
+
+    })
 
     it('should create', async () => {
-        setDB(dataset1)
+        //setDB(dataset1)
+        await deleteDB()
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertOne(datasetBlog)
+        // @ts-ignore
+        delete datasetBlog._id
+
+
         const newPost: postsInoutData = {
             title: 't1',
             shortDescription: 's1',
             content: 'c1',
-            blogId: dataset1.blogs[0].id,
+            blogId: datasetBlog.id,
         }
 
         const res = await req
@@ -27,6 +49,7 @@ describe('/posts', () => {
             .expect(201)
 
         // console.log(res.body)
+        const posts = await postsCollection.find({}, {projection: {_id: 0}}).toArray()
 
         expect(res.body.title).toEqual(newPost.title)
         expect(res.body.shortDescription).toEqual(newPost.shortDescription)
@@ -35,15 +58,30 @@ describe('/posts', () => {
         expect(res.body.blogName).toEqual(dataset1.blogs[0].name)
         expect(typeof res.body.id).toEqual('string')
 
-        expect(res.body).toEqual(db.posts[0])
+        expect(res.body).toEqual(posts[0])
     })
     it('shouldn\'t create 401', async () => {
-        setDB(dataset1)
+
+        await deleteDB()
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertOne(datasetBlog)
+        // @ts-ignore
+        delete datasetBlog._id
+
         const newPost: postsInoutData = {
             title: 't1',
             shortDescription: 's1',
             content: 'c1',
-            blogId: dataset1.blogs[0].id,
+            blogId: datasetBlog.id,
         }
 
         const res = await req
@@ -56,7 +94,7 @@ describe('/posts', () => {
         expect(db.posts.length).toEqual(0)
     })
     it('shouldn\'t create', async () => {
-        setDB()
+        await deleteDB()
         const newPost: postsInoutData = {
             title: createString(31),
             content: createString(1001),
@@ -81,7 +119,7 @@ describe('/posts', () => {
         expect(db.posts.length).toEqual(0)
     })
     it('should get empty array', async () => {
-        setDB() // очистка базы данных если нужно
+        await deleteDB()// очистка базы данных если нужно
 
         const res = await req
             .get(SETTINGS.PATH.POSTS)
@@ -92,7 +130,41 @@ describe('/posts', () => {
         expect(res.body.length).toEqual(0) // проверяем ответ эндпоинта
     })
     it('should get not empty array', async () => {
-        setDB(dataset2) // заполнение базы данных начальными данными если нужно
+        //setDB(dataset2) // заполнение базы данных начальными данными если нужно
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }, {
+            id: String(+(new Date())),
+            name: 'n7',
+            description: 'd7',
+            websiteUrl: 'http://some7.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog[0].id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
+
+        // @ts-ignore
+        delete datasetPost._id
 
         const res = await req
             .get(SETTINGS.PATH.POSTS)
@@ -101,10 +173,25 @@ describe('/posts', () => {
         // console.log(res.body)
 
         expect(res.body.length).toEqual(1)
-        expect(res.body[0]).toEqual(dataset2.posts[0])
+        expect(res.body[0]).toEqual(datasetPost)
     })
     it('shouldn\'t find', async () => {
-        setDB(dataset1)
+        //setDB(dataset1)
+
+        await deleteDB()
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertOne(datasetBlog)
+        // @ts-ignore
+        delete datasetBlog._id
 
         const res = await req
             .get(SETTINGS.PATH.POSTS + '/1')
@@ -113,30 +200,98 @@ describe('/posts', () => {
         // console.log(res.body)
     })
     it('should find', async () => {
-        setDB(dataset2)
+        //setDB(dataset2)
+
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }, {
+            id: String(+(new Date())),
+            name: 'n7',
+            description: 'd7',
+            websiteUrl: 'http://some7.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog[0].id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
+
+        // @ts-ignore
+        delete datasetPost._id
 
         const res = await req
-            .get(SETTINGS.PATH.POSTS + '/' + dataset2.posts[0].id)
+            .get(SETTINGS.PATH.POSTS + '/' + datasetPost.id)
             .expect(200) // проверка на ошибку
 
         // console.log(res.body)
 
-        expect(res.body).toEqual(dataset2.posts[0])
+        expect(res.body).toEqual(datasetPost)
     })
     it('should del', async () => {
-        setDB(dataset2)
+        /// setDB(dataset2)
+
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }, {
+            id: String(+(new Date())),
+            name: 'n7',
+            description: 'd7',
+            websiteUrl: 'http://some7.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: blog1.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
 
         const res = await req
-            .delete(SETTINGS.PATH.POSTS + '/' + dataset2.posts[0].id)
+            .delete(SETTINGS.PATH.POSTS + '/' + datasetPost.id)
             .set({'Authorization': 'Basic ' + codedAuth})
             .expect(204) // проверка на ошибку
 
         // console.log(res.body)
 
-        expect(db.posts.length).toEqual(0)
+        const posts = await postsCollection.find().toArray()
+
+        expect(posts.length).toEqual(0)
     })
     it('shouldn\'t del', async () => {
-        setDB()
+        //setDB()
+        await deleteDB()
 
         const res = await req
             .delete(SETTINGS.PATH.POSTS + '/1')
@@ -146,7 +301,9 @@ describe('/posts', () => {
         // console.log(res.body)
     })
     it('shouldn\'t del 401', async () => {
-        setDB()
+        // setDB()
+
+        await deleteDB()
 
         const res = await req
             .delete(SETTINGS.PATH.POSTS + '/1')
@@ -156,32 +313,99 @@ describe('/posts', () => {
         // console.log(res.body)
     })
     it('should update', async () => {
-        setDB(dataset2)
+        //setDB(dataset2)
+
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }, {
+            id: String(+(new Date())),
+            name: 'n7',
+            description: 'd7',
+            websiteUrl: 'http://some7.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog[0].id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
+
+        // @ts-ignore
+        delete datasetPost._id
+
         const post: postsInoutData = {
             title: 't2',
             shortDescription: 's2',
             content: 'c2',
-            blogId: dataset2.blogs[1].id,
+            blogId: datasetBlog[0].id,
         }
 
         const res = await req
-            .put(SETTINGS.PATH.POSTS + '/' + dataset2.posts[0].id)
+            .put(SETTINGS.PATH.POSTS + '/' + datasetPost.id)
             .set({'Authorization': 'Basic ' + codedAuth})
             .send(post)
             .expect(204) // проверка на ошибку
 
+        const postUpdated = await postsCollection.findOne({id: datasetPost.id}, {projection: {_id: 0}})
 
-
-        expect(db.posts[0]).toEqual({...db.posts[0], ...post, blogName: dataset2.blogs[1].name})
+        expect(postUpdated).toEqual({...datasetPost, ...post})
     })
     it('shouldn\'t update 404', async () => {
-        setDB(dataset1)
+        //setDB(dataset1)
+
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        },
+            {
+                id: String(+(new Date())),
+                name: 'n7',
+                description: 'd7',
+                websiteUrl: 'http://some7.com',
+                isMembership: false,
+                createdAt: new Date().toISOString()
+            }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog[0].id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
 
         const post: postsInoutData = {
             title: 't1',
             shortDescription: 's1',
             content: 'c1',
-            blogId: dataset1.blogs[0].id,
+            blogId: datasetBlog[0].id,
         }
 
         const res = await req
@@ -193,7 +417,46 @@ describe('/posts', () => {
         // console.log(res.body)
     })
     it('shouldn\'t update2', async () => {
-        setDB(dataset2)
+        ///setDB(dataset2)
+
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }, {
+            id: String(+(new Date())),
+            name: 'n7',
+            description: 'd7',
+            websiteUrl: 'http://some7.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: blog1.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
+
+        // @ts-ignore
+        delete datasetPost._id
+        // @ts-ignore
+        delete datasetBlog[0]._id
+        // @ts-ignore
+        delete datasetBlog[1]._id
+
         const post: postsInoutData = {
             title: createString(31),
             content: createString(1001),
@@ -202,14 +465,18 @@ describe('/posts', () => {
         }
 
         const res = await req
-            .put(SETTINGS.PATH.POSTS + '/' + dataset2.posts[0].id)
+            .put(SETTINGS.PATH.POSTS + '/' + datasetPost.id)
             .set({'Authorization': 'Basic ' + codedAuth})
             .send(post)
             .expect(400) // проверка на ошибку
 
         // console.log(res.body)
+        const blogs = await blogsCollection.find({}, {projection: {_id: 0}}).toArray()
+        const posts = await postsCollection.find({}, {projection: {_id: 0}}).toArray()
 
-        expect(db).toEqual(dataset2)
+
+        expect(blogs).toEqual(datasetBlog)
+        expect(posts[0]).toEqual(datasetPost)
         expect(res.body.errorsMessages.length).toEqual(4)
         expect(res.body.errorsMessages[0].field).toEqual('title')
         expect(res.body.errorsMessages[1].field).toEqual('shortDescription')
@@ -217,7 +484,46 @@ describe('/posts', () => {
         expect(res.body.errorsMessages[3].field).toEqual('blogId')
     })
     it('shouldn\'t update 401', async () => {
-        setDB(dataset2)
+        /// setDB(dataset2)
+
+        await deleteDB()
+
+        const datasetBlog = [{
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }, {
+            id: String(+(new Date())),
+            name: 'n7',
+            description: 'd7',
+            websiteUrl: 'http://some7.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }]
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog[0].id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertMany(datasetBlog)
+        await postsCollection.insertOne(datasetPost)
+
+        // @ts-ignore
+        delete datasetPost._id
+        // @ts-ignore
+        delete datasetBlog[0]._id
+        // @ts-ignore
+        delete datasetBlog[1]._id
+
         const post: postsInoutData = {
             title: createString(31),
             content: createString(1001),
@@ -226,13 +532,19 @@ describe('/posts', () => {
         }
 
         const res = await req
-            .put(SETTINGS.PATH.POSTS + '/' + dataset2.posts[0].id)
+            .put(SETTINGS.PATH.POSTS + '/' + datasetPost.id)
             .set({'Authorization': 'Basic ' + codedAuth + 'error'})
             .send(post)
             .expect(401) // проверка на ошибку
 
+
+        const blogs = await blogsCollection.find({}, {projection: {_id: 0}}).toArray()
+        const posts = await postsCollection.find({}, {projection: {_id: 0}}).toArray()
+
         // console.log(res.body)
 
-        expect(db).toEqual(dataset2)
+
+        expect(blogs).toEqual(datasetBlog)
+        expect(posts[0]).toEqual(datasetPost)
     })
 })

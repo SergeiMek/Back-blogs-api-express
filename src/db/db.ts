@@ -1,4 +1,6 @@
 import {blogsType, postType, videoType} from "./dbType";
+import {getRawAsset} from "node:sea";
+import {blogsCollection, postsCollection, videosCollection} from "./dbInMongo";
 
 export type DBType = {
     videos: videoType[]
@@ -29,7 +31,7 @@ export const availableResolutions = ["P144",
     "P1440",
     "P2160"]
 // функция для быстрой очистки/заполнения базы данных для тестов
-export const setDB = (dataset?: Partial<ReadonlyDBType>) => {
+/*export const setDB = (dataset?: Partial<ReadonlyDBType>) => {
     if (!dataset) { // если в функцию ничего не передано - то очищаем базу данных
         db.blogs = []
         db.posts = []
@@ -42,4 +44,10 @@ export const setDB = (dataset?: Partial<ReadonlyDBType>) => {
     db.posts = dataset.posts?.map(p => ({...p})) || db.posts
     db.videos = dataset.videos?.map(v => ({...v})) || db.videos
 
+}*/
+
+export const deleteDB = async () => {
+        await videosCollection.deleteMany({})
+        await postsCollection.deleteMany({})
+        await blogsCollection.deleteMany({})
 }
