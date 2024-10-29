@@ -27,13 +27,8 @@ blogsRouter.get('/:id', async (req: Request<{ id: string }>, res: Response<Outpu
 })
 
 blogsRouter.post('/', authBasic, validationBlogsInput, async (req: Request<{}, {}, blogInputData>, res: Response<OutputBlogsType>) => {
-    /*const newVideoData = {
-        name: req.body.name,
-        description: req.body.description,
-        websiteUrl: req.body.websiteUrl
-    }*/
 
-   // const createdBlog = await blogsService.createdBlog(newVideoData)
+
     const createdBlog = await blogsService.createdBlog(req.body)
 
     res.status(HTTP_STATUSES.CREATED_201).json(createdBlog)

@@ -41,13 +41,6 @@ export const blogsService = {
         return newBlog
     },
     async updateBlog(blogId: string, updateVideoData: blogInputData): Promise<boolean> {
-        const {name, description, websiteUrl} = updateVideoData
-
-        /* const updateBlog = {
-             name,
-             description,
-             websiteUrl
-         }*/
 
         const result = await blogsRepository.updateBlog(blogId, updateVideoData)
 
