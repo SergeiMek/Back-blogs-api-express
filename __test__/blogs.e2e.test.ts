@@ -7,6 +7,8 @@ import {blogsCollection, runDb} from "../src/db/dbInMongo";
 
 
 describe('/blogs', () => {
+
+
     beforeAll(async () => { // очистка базы данных перед началом тестирования
 
         const server = await MongoMemoryServer.create()
@@ -14,7 +16,6 @@ describe('/blogs', () => {
         await runDb(url)
         await blogsCollection.deleteMany({})
     })
-
 
     it('should create', async () => {
         // setDB()
@@ -345,4 +346,5 @@ describe('/blogs', () => {
 
         expect(createdBlog).toEqual(dataset)
     })
+
 })

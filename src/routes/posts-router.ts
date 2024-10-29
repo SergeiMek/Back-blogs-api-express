@@ -2,8 +2,8 @@ import {Request, Response, Router} from "express";
 import {HTTP_STATUSES} from "../settings";
 import {authBasic} from "../midlewares/auth/auth-basic";
 import {OutputPostsType, postsInoutData} from "../types/postType";
-import {postsRepository} from "../repositories/posts-repository";
 import {validationPosts} from "../midlewares/validations/input/validation-posts-input";
+import {postsService} from "../domain/posts-service";
 
 
 export const postsRouter = Router({})
@@ -11,12 +11,12 @@ export const postsRouter = Router({})
 
 postsRouter.get('/', async (req: Request, res: Response<OutputPostsType>) => {
 
-    res.status(HTTP_STATUSES.OK_200).json(await postsRepository.getAllPosts())
+    res.status(HTTP_STATUSES.OK_200).json(await postsService.getAllPosts())
 })
 
 postsRouter.get('/:id', async (req: Request<{ id: string }>, res: Response<OutputPostsType>) => {
 
-    const post = await postsRepository.findPostById(req.params.id)
+    const post = await postsService.findPostById(req.params.id)
 
     if (post) {
         res.status(HTTP_STATUSES.OK_200).json(post)
@@ -26,14 +26,14 @@ postsRouter.get('/:id', async (req: Request<{ id: string }>, res: Response<Outpu
 })
 
 postsRouter.post('/', authBasic, validationPosts, async (req: Request<{}, {}, postsInoutData>, res: Response<OutputPostsType>) => {
-    const newPostData = {
+    /*const newPostData = {
         title: req.body.title,
         shortDescription: req.body.shortDescription,
         content: req.body.content,
         blogId: req.body.blogId
-    }
+    }*/
 
-    const createdPost = await postsRepository.createdPost(newPostData)
+    const createdPost = await postsService.createdPost(req.body)
 
     res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
 
@@ -42,15 +42,13 @@ postsRouter.post('/', authBasic, validationPosts, async (req: Request<{}, {}, po
 postsRouter.put('/:id', authBasic, validationPosts ,async (req: Request<{
     id: string
 }, {}, postsInoutData>, res: Response<OutputPostsType>) => {
-    debugger
-    const updatePostData = {
+    /*const updatePostData = {
         title: req.body.title,
         shortDescription: req.body.shortDescription,
         content: req.body.content,
         blogId: req.body.blogId
-    }
-    debugger
-    const updatedPost = await postsRepository.updatePost(req.params.id, updatePostData)
+    }*/
+    const updatedPost = await postsService.updatePost(req.params.id, req.body)
 
     if (updatedPost) {
         res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
@@ -62,7 +60,7 @@ postsRouter.put('/:id', authBasic, validationPosts ,async (req: Request<{
 
 postsRouter.delete('/:id', authBasic, async (req: Request<{ id: string }>, res: Response<OutputPostsType>) => {
 
-    const isDeleted = await postsRepository.deletePost(req.params.id)
+    const isDeleted = await postsService.deletePost(req.params.id)
 
     if (isDeleted) {
         res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
