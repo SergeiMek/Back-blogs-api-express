@@ -4,19 +4,29 @@ import {authBasic} from "../midlewares/auth/auth-basic";
 import {OutputPostsType, postsInoutData} from "../types/postType";
 import {validationPosts} from "../midlewares/validations/input/validation-posts-input";
 import {postsService} from "../domain/posts-service";
+import {postsQueryRepository} from "../repositories/posts-query-repository";
+import {blogQueryBlogType} from "../types/blogType";
+import {paginationQueries} from "../helpers/paginations_values";
 
 
 export const postsRouter = Router({})
 
 
-postsRouter.get('/', async (req: Request, res: Response<OutputPostsType>) => {
+postsRouter.get('/', async (req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) => {
+    const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
-    res.status(HTTP_STATUSES.OK_200).json(await postsService.getAllPosts())
+
+    res.status(HTTP_STATUSES.OK_200).json(await postsQueryRepository.getAllPosts({
+        sortBy,
+        sortDirection,
+        pageNumber,
+        pageSize
+    }))
 })
 
 postsRouter.get('/:id', async (req: Request<{ id: string }>, res: Response<OutputPostsType>) => {
 
-    const post = await postsService.findPostById(req.params.id)
+    const post = await postsQueryRepository.findPostById(req.params.id)
 
     if (post) {
         res.status(HTTP_STATUSES.OK_200).json(post)
@@ -26,12 +36,7 @@ postsRouter.get('/:id', async (req: Request<{ id: string }>, res: Response<Outpu
 })
 
 postsRouter.post('/', authBasic, validationPosts, async (req: Request<{}, {}, postsInoutData>, res: Response<OutputPostsType>) => {
-    /*const newPostData = {
-        title: req.body.title,
-        shortDescription: req.body.shortDescription,
-        content: req.body.content,
-        blogId: req.body.blogId
-    }*/
+
 
     const createdPost = await postsService.createdPost(req.body)
 
@@ -39,7 +44,7 @@ postsRouter.post('/', authBasic, validationPosts, async (req: Request<{}, {}, po
 
 })
 
-postsRouter.put('/:id', authBasic, validationPosts ,async (req: Request<{
+postsRouter.put('/:id', authBasic, validationPosts, async (req: Request<{
     id: string
 }, {}, postsInoutData>, res: Response<OutputPostsType>) => {
     /*const updatePostData = {

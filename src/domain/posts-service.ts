@@ -2,35 +2,16 @@ import {postsInoutData} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
 import {postsRepository} from "../repositories/posts-repository";
 import {blogsRepository} from "../repositories/blogs-repository";
+import {BlogsQueryRepository} from "../repositories/blog-query-repository";
 
 
 export const postsService = {
-    async getAllPosts(): Promise<postType[]> {
-        const posts = await postsRepository.getAllPosts()
-        return this._postMapping(posts)
-    },
-    async findPostById(id: string): Promise<postType | null> {
-        const post = await postsRepository.findPostById(id)
 
-        if (post) {
-            return {
-                id: post.id,
-                title: post.title,
-                shortDescription: post.shortDescription,
-                content: post.content,
-                blogId: post.blogId,
-                blogName: post.blogName,
-                createdAt: post.createdAt
-            }
-        } else {
-            return null
-        }
-    },
     async createdPost(newPostCreatedData: postsInoutData): Promise<postType> {
 
         //let {title, shortDescription, content,blogId} = newPostCreatedData
 
-        const blog = await blogsRepository.findBlogById(newPostCreatedData.blogId)
+        const blog = await BlogsQueryRepository.findBlogById(newPostCreatedData.blogId)
 
         const newPost = {
             id: String(+(new Date())),

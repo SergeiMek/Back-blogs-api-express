@@ -1,4 +1,4 @@
-import {postsInoutData} from "../types/postType";
+import {findPostData, postsInoutData} from "../types/postType";
 import {blogsRepository} from "./blogs-repository";
 import {postDBType, postType} from "../db/dbType";
 import {postsCollection} from "../db/dbInMongo";
@@ -6,15 +6,7 @@ import {DeleteResult, UpdateResult} from "mongodb";
 
 
 export const postsRepository = {
-    async getAllPosts(): Promise<postDBType[]> {
-        return await postsCollection.find().toArray()
 
-    },
-    async findPostById(id: string): Promise<postType | null> {
-        return await postsCollection.findOne({id: id})
-
-
-    },
     async createdPost(newPostCreatedData: postType): Promise<postType> {
 
         const result = await postsCollection.insertOne(newPostCreatedData)

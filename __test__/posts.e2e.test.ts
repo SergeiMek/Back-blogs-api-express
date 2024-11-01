@@ -127,7 +127,11 @@ describe('/posts', () => {
 
         // console.log(res.body) // можно посмотреть ответ эндпоинта
 
-        expect(res.body.length).toEqual(0) // проверяем ответ эндпоинта
+        expect(res.body.items.length).toEqual(0) // проверяем ответ эндпоинта
+        expect(res.body.pagesCount).toEqual(0) // проверяем ответ эндпоинта
+        expect(res.body.page).toEqual(1) // проверяем ответ эндпоинта
+        expect(res.body.pageSize).toEqual(10) // проверяем ответ эндпоинта
+        expect(res.body.totalCount).toEqual(0) // проверяем ответ эндпоинта
     })
     it('should get not empty array', async () => {
         //setDB(dataset2) // заполнение базы данных начальными данными если нужно
@@ -172,9 +176,51 @@ describe('/posts', () => {
 
         // console.log(res.body)
 
-        expect(res.body.length).toEqual(1)
-        expect(res.body[0]).toEqual(datasetPost)
+        expect(res.body.items.length).toEqual(1)
+        expect(res.body.items[0]).toEqual(datasetPost)
     })
+
+    it('should get post pagination', async () => {
+        //setDB() // очистка базы данных если нужно
+
+        await postsCollection.deleteMany({})
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        await blogsCollection.insertOne(datasetBlog)
+
+        const posts = [...new Array(300)].map((_, index) => ({
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString()
+        }))
+        await postsCollection.insertMany(posts)
+
+        const res = await req
+            .get(SETTINGS.PATH.POSTS + '?pageNumber=5&pageSize=10')
+            .expect(200)
+
+        console.log(res.body)
+
+        expect(res.body.items.length).toEqual(10)
+        expect(res.body.pagesCount).toEqual(30)
+        expect(res.body.page).toEqual(5)
+        expect(res.body.pageSize).toEqual(10)
+        expect(res.body.totalCount).toEqual(300)
+
+    })
+
+
     it('shouldn\'t find', async () => {
         //setDB(dataset1)
 

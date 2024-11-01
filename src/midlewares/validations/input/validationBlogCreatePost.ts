@@ -1,19 +1,9 @@
 import {body} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
-import {BlogsQueryRepository} from "../../../repositories/blog-query-repository";
+import {validationPostsCreationCustom} from "./validation-posts-input";
+import {validationBlogCreationCustom} from "./validation-blogs-input";
 
-
-export const validationPostsCreationCustom = body("blogId").isString().withMessage('not string')
-    .trim().custom(async (value) => {
-        const blog = await BlogsQueryRepository.findBlogById(value);
-        if (!blog) {
-            throw new Error("Blog with provided ID not found");
-        }
-        return true;
-    });
-
-
-export const validationPosts = [
+export const validationBlogInPost = [
     body("title")
         .exists()
         .withMessage("Title is required")
@@ -58,7 +48,6 @@ export const validationPosts = [
         .withMessage("Blog ID is required")
         .isString()
         .withMessage("Type of Blog ID must be string"),
-    validationPostsCreationCustom,
+    validationBlogCreationCustom,
     inputCheckErrorsMiddleware
 ];
-

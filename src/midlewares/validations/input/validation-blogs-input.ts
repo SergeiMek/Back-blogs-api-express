@@ -1,5 +1,11 @@
-import {body} from "express-validator";
-import {inputCheckErrorsMiddleware} from "../_validation-error-check";
+import {body, param} from "express-validator";
+import {
+    inputCheckErrorsMiddleware,
+    inputCheckPostIdMiddleware
+
+} from "../_validation-error-check";
+
+import {BlogsQueryRepository} from "../../../repositories/blog-query-repository";
 
 const websiteUrlPattern =
     /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/;
@@ -48,3 +54,15 @@ export const validationBlogsInput = [
         .withMessage("Website URL must be in correct format"),
     inputCheckErrorsMiddleware
 ];
+
+ export const validationBlogCreationCustom = param("blogId").isString().withMessage('not string')
+    .trim().custom(async (value) => {
+        const blog = await BlogsQueryRepository.findBlogById(value);
+        if (!blog) {
+            throw new Error("Blog with provided ID not found");
+        }
+        return true;
+    });
+
+
+export const validationBlogsFindByParamId = [validationBlogCreationCustom, inputCheckPostIdMiddleware]
