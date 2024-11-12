@@ -1,6 +1,6 @@
 import {blogsType, postType, videoType} from "./dbType";
 import {getRawAsset} from "node:sea";
-import {blogsCollection, postsCollection, videosCollection} from "./dbInMongo";
+import {blogsCollection, postsCollection, usersCollection, videosCollection} from "./dbInMongo";
 
 export type DBType = {
     videos: videoType[]
@@ -47,7 +47,8 @@ export const availableResolutions = ["P144",
 }*/
 
 export const deleteDB = async () => {
-        await videosCollection.deleteMany({})
-        await postsCollection.deleteMany({})
-        await blogsCollection.deleteMany({})
+    await videosCollection.deleteMany({})
+    await postsCollection.deleteMany({})
+    await blogsCollection.deleteMany({})
+    await usersCollection.deleteMany({})
 }

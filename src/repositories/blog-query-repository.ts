@@ -1,5 +1,4 @@
 import {blogsDBType, blogsType} from "../db/dbType";
-import {blogsRepository} from "./blogs-repository";
 import {blogDataFindType, blogQueryOutputType} from "../types/blogType";
 import {blogsCollection} from "../db/dbInMongo";
 

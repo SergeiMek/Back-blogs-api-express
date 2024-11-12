@@ -1,5 +1,6 @@
 import {ObjectId} from "mongodb";
 
+
 enum availableResolutions {
     "P144",
     "P240",
@@ -42,7 +43,7 @@ export type videoType = {
     minAgeRestriction: number | null,
     createdAt: string,
     publicationDate: string,
-    availableResolutions:  Array<availableResolutions>
+    availableResolutions: Array<availableResolutions>
 
 
 }
@@ -97,5 +98,14 @@ export type postDBType = {
     content: string
     blogId: string
     blogName: string
+    createdAt: string
+}
+
+export type usersDBType = {
+    _id: ObjectId
+    login: string
+    email: string
+    passwordHash: string
+    passwordSalt: string
     createdAt: string
 }

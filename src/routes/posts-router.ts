@@ -5,14 +5,14 @@ import {OutputPostsType, postsInoutData} from "../types/postType";
 import {validationPosts} from "../midlewares/validations/input/validation-posts-input";
 import {postsService} from "../domain/posts-service";
 import {postsQueryRepository} from "../repositories/posts-query-repository";
-import {blogQueryBlogType} from "../types/blogType";
 import {paginationQueries} from "../helpers/paginations_values";
+import {blogQueryBlogType} from "../types/blogType";
 
 
 export const postsRouter = Router({})
 
 
-postsRouter.get('/', async (req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) => {
+postsRouter.get('/', async (req: Request<{},{},{},blogQueryBlogType>, res: Response<OutputPostsType>) => {
     const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
 
