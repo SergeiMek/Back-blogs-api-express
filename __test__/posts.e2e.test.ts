@@ -4,17 +4,36 @@ import {SETTINGS} from "../src/settings";
 import {blog1, codedAuth, createString, dataset1, dataset2} from "./helpers/datasets";
 import {postsInoutData} from "../src/types/postType";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {blogsCollection, postsCollection, runDb} from "../src/db/dbInMongo";
+import {blogsCollection, dbMongo, postsCollection} from "../src/db/dbInMongo";
 import {postsRepository} from "../src/repositories/posts-repository";
 
 
 describe('/posts', () => {
-    beforeAll(async () => { // очистка базы данных перед началом тестирования
+   /* beforeAll(async () => { // очистка базы данных перед началом тестирования
         const server = await MongoMemoryServer.create()
         const url = server.getUri()
         await runDb(url)
         await blogsCollection.deleteMany({})
 
+    })
+*/
+
+    beforeAll(async () => {
+        const mongoServer = await MongoMemoryServer.create()
+        await dbMongo.run(mongoServer.getUri());
+    })
+
+    beforeEach(async () => {
+        await dbMongo.drop();
+    })
+
+    afterAll(async () => {
+        await dbMongo.stop();
+
+    })
+
+    afterAll(done => {
+        done()
     })
 
     it('should create', async () => {

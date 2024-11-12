@@ -18,10 +18,7 @@ const loginOrEmail = body("loginOrEmail")
     .withMessage(
         "Login length must be more than 3 and less than or equal to 50 symbols"
     )
-    .matches(/^[a-zA-Z0-9_-]*$/)
-    .withMessage(
-        "Login has invalid characters"
-    )
+
 
 const password = body("password").exists()
     .withMessage("Password is required")

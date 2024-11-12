@@ -1,14 +1,14 @@
 import {req} from './test-helpers'
 import {HTTP_STATUSES, SETTINGS} from '../src/settings'
 import {inputVideoType} from "../src/types/videosType";
-import {runDb, videosCollection} from "../src/db/dbInMongo";
+import {dbMongo, videosCollection} from "../src/db/dbInMongo";
 import {MongoMemoryServer} from "mongodb-memory-server";
 
 
 describe(SETTINGS.PATH.VIDEOS, () => {
-    beforeAll(async () => { // очистка базы данных перед началом тестирования
-        /*    await runDb(SETTINGS.MONGO_URL)
-            await videosCollection.deleteMany()*/
+    /*beforeAll(async () => { // очистка базы данных перед началом тестирования
+        /!*    await runDb(SETTINGS.MONGO_URL)
+            await videosCollection.deleteMany()*!/
 
         const server = await MongoMemoryServer.create()
         const url = server.getUri()
@@ -16,6 +16,25 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         await videosCollection.deleteMany({})
 
     })
+*/
+    beforeAll(async () => {
+        const mongoServer = await MongoMemoryServer.create()
+        await dbMongo.run(mongoServer.getUri());
+    })
+
+    beforeEach(async () => {
+        await dbMongo.drop();
+    })
+
+    afterAll(async () => {
+        await dbMongo.stop();
+
+    })
+
+    afterAll(done => {
+        done()
+    })
+
 
     it('should get empty array', async () => {
         await videosCollection.deleteMany({}) // очистка базы данных если нужно

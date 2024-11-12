@@ -16,6 +16,10 @@ export const SETTINGS = {
     MONGO_URL:process.env.MONGO_URL || ' '
 }
 
+export const ADMIN_LOGIN = 'admin'
+export const ADMIN_PASS = 'qwerty'
+
+
 export const HTTP_STATUSES = {
     OK_200: 200,
     CREATED_201: 201,
