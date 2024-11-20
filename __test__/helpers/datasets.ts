@@ -4,6 +4,8 @@ import {ObjectId} from "mongodb";
 // @ts-ignore
 import bcrypt from "bcrypt";
 import {getRawAsset} from "node:sea";
+import {blogsCollection, commentsCollection, postsCollection, usersCollection} from "../../src/db/dbInMongo";
+import {commentsRepository} from "../../src/repositories/comments-repository";
 
 
 export const createString = (length: number) => {
@@ -98,5 +100,56 @@ export async function createOneUser(email: string, login: string, password: stri
         email: email,
         passwordHash,
         passwordSalt
+    }
+}
+
+type dataCreateCommentData = {
+    content: string
+    emailUser: string
+    loginUser: string
+    passwordUser: string
+
+}
+
+export async function createComment(data:dataCreateCommentData) {
+    const datasetBlog = {
+        id: String(+(new Date())),
+        name: 'n1',
+        description: 'd1',
+        websiteUrl: 'https://some.com',
+        isMembership: false,
+        createdAt: new Date().toISOString()
+    }
+
+    const posts = [...new Array(1)].map((_, index) => ({
+        id: String(+(new Date())),
+        title: 't1',
+        content: 'c1',
+        shortDescription: 's1',
+        blogId: datasetBlog.id,
+        blogName: 'n1',
+        createdAt: new Date().toISOString()
+    }))
+    const user = await createOneUser(data.emailUser, data.loginUser, data.passwordUser)
+    await blogsCollection.insertOne(datasetBlog)
+    await postsCollection.insertMany(posts)
+    await usersCollection.insertOne(user)
+    const comment = {
+        _id: new ObjectId,
+        content: data.content,
+        commentatorInfo: {
+            userId: user._id,
+            userLogin: user.login
+        },
+        createdAt: new Date().toISOString(),
+        postId: posts[0].id
+    }
+    await commentsCollection.insertOne(comment)
+    return {
+        commentId: comment._id,
+        userLogin: user.login,
+        userPassword: data.passwordUser,
+        userEmail: user.email,
+        postId: posts[0].id
     }
 }

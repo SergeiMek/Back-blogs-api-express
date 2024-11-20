@@ -109,3 +109,14 @@ export type usersDBType = {
     passwordSalt: string
     createdAt: string
 }
+
+export type commentsDBType = {
+    _id: ObjectId
+    content: string
+    commentatorInfo: {
+        userId: ObjectId
+        userLogin: string
+    }
+    createdAt: string,
+    postId: string
+}

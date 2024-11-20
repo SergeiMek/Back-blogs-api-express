@@ -1,6 +1,6 @@
 import {blogsType, postType, videoType} from "./dbType";
 import {getRawAsset} from "node:sea";
-import {blogsCollection, postsCollection, usersCollection, videosCollection} from "./dbInMongo";
+import {blogsCollection, commentsCollection, postsCollection, usersCollection, videosCollection} from "./dbInMongo";
 
 export type DBType = {
     videos: videoType[]
@@ -51,4 +51,5 @@ export const deleteDB = async () => {
     await postsCollection.deleteMany({})
     await blogsCollection.deleteMany({})
     await usersCollection.deleteMany({})
+    await commentsCollection.deleteMany({})
 }

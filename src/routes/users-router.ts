@@ -2,11 +2,12 @@ import {Request, Response, Router} from "express";
 import {userInputType, usersEntityType, usersOutputType, usersQueryType} from "../types/usersType";
 import {paginationUsersQueries} from "../helpers/paginations_values";
 import {HTTP_STATUSES} from "../settings";
-import {usersQueryRepository} from "../repositories/users-query-repository";
+
 import {authBasic} from "../midlewares/auth/auth-basic";
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
 import {usersService} from "../domain/users-service";
 import {postsService} from "../domain/posts-service";
+import {usersQueryRepository} from "../repositories/users-query-repository";
 
 
 export const usersRouter = Router({})

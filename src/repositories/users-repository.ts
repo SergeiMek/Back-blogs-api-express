@@ -11,6 +11,12 @@ export const usersRepository = {
         return newUser.insertedId.toString()
 
     },
+    async findUserById(id: ObjectId): Promise<usersDBType | null> {
+
+        const user = await usersCollection.findOne({_id: id})
+        if (!user) return null
+        return user
+    },
     async findByLoginOrEmail(loginOrEmail: string): Promise<WithId<usersDBType> | null> {
         return usersCollection.findOne({
             $or: [{email: loginOrEmail}, {login: loginOrEmail}],

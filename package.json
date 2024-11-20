@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -11,6 +12,7 @@
     "express-validator": "^7.2.0",
     "i": "^0.3.7",
     "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.10.0",
     "mongodb-memory-server": "^10.1.2",
     "npm": "^10.9.0"

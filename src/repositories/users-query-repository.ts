@@ -1,7 +1,6 @@
 import {usersDBType} from "../db/dbType";
 import {usersCollection} from "../db/dbInMongo";
 import {usersEntityType, usersOutputType, usersQueryOutputType} from "../types/usersType";
-import {usersRepository} from "./users-repository";
 import {ObjectId} from "mongodb";
 
 

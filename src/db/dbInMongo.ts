@@ -1,6 +1,6 @@
 import {SETTINGS} from "../settings";
 import {Db, MongoClient} from "mongodb";
-import {blogsType, postType, usersDBType, videoType} from "./dbType";
+import {blogsType, commentsDBType, postType, usersDBType, videoType} from "./dbType";
 import {deleteDB} from "./db";
 
 
@@ -73,3 +73,4 @@ export const videosCollection = db.collection<videoType>('videos')
 export const postsCollection = db.collection<postType>('posts')
 export const blogsCollection = db.collection<blogsType>('blogs')
 export const usersCollection = db.collection<usersDBType>('users')
+export const commentsCollection = db.collection<commentsDBType>('comments')

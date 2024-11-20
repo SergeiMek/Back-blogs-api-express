@@ -25,17 +25,20 @@ export const usersService = {
 
         return usersRepository.createdUser(newUser)
     },
-    async checkCredentials(loginOrEmail: string, password: string): Promise<boolean> {
+    async checkCredentials(loginOrEmail: string, password: string): Promise<usersDBType | null> {
         const user = await usersRepository.findByLoginOrEmail(loginOrEmail)
-        if (!user) return false
+        if (!user) return null
         const passwordHash = await this._generateHash(password, user.passwordSalt)
         if (user.passwordHash !== passwordHash) {
-            return false
+            return null
         }
-        return true
+        return user
     },
     async deleteUser(id: string): Promise<boolean> {
         return await usersRepository.deleteUser(id)
+    },
+    async findUserById(id: ObjectId):Promise<null | usersDBType> {
+        return await usersRepository.findUserById(id)
     },
     async _generateHash(password: string, salt: string) {
         return await bcrypt.hash(password, salt)

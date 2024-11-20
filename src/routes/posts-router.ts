@@ -7,12 +7,17 @@ import {postsService} from "../domain/posts-service";
 import {postsQueryRepository} from "../repositories/posts-query-repository";
 import {paginationQueries} from "../helpers/paginations_values";
 import {blogQueryBlogType} from "../types/blogType";
+import {validationCommentsInputPost} from "../midlewares/validations/input/validation-comments-input";
+import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
+import {commentsService} from "../domain/comments-service";
+import {CommentsOutputType, commentsQueryType} from "../types/commentsType";
+import {commentsQueryRepository} from "../repositories/comments-query-repository";
 
 
 export const postsRouter = Router({})
 
 
-postsRouter.get('/', async (req: Request<{},{},{},blogQueryBlogType>, res: Response<OutputPostsType>) => {
+postsRouter.get('/', async (req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) => {
     const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
 
@@ -41,6 +46,46 @@ postsRouter.post('/', authBasic, validationPosts, async (req: Request<{}, {}, po
     const createdPost = await postsService.createdPost(req.body)
 
     res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
+
+})
+
+postsRouter.get('/:postId/comments', async (req: Request<{
+    postId: string
+}, {}, {}, commentsQueryType>, res: Response<CommentsOutputType | null>) => {
+    const postId = req.params.postId
+    const {pageNumber, pageSize, sortBy, sortDirection} = paginationQueries(req)
+    //res.status(HTTP_STATUSES.CREATED_201).json(createdComment)
+    const findComments = await commentsQueryRepository.getAllComments({
+        pageNumber,
+        pageSize,
+        sortBy,
+        sortDirection,
+        postId
+    })
+    if (findComments.status === 1) {
+        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+    }
+    if (findComments.status === 0) {
+        res.status(HTTP_STATUSES.OK_200).send(findComments.data)
+    }
+})
+
+postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, async (req: Request<{
+    postId: string
+}, {}, { content: string }>, res: Response) => {
+    const commentData = {
+        userId: req.user!._id,
+        content: req.body.content,
+        postId: req.params.postId
+    }
+    const createdComment = await commentsService.createdComment(commentData)
+
+    if (createdComment.status === 2) {
+        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+    }
+    if (createdComment.status === 0) {
+        res.status(HTTP_STATUSES.CREATED_201).send(createdComment.data)
+    }
 
 })
 
