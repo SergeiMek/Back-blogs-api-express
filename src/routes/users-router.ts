@@ -32,9 +32,9 @@ usersRouter.post('/', authBasic, validationUsersInputPost, async (req: Request<{
     const {login, password, email} = req.body
 
     const createdUserId = await usersService.createdUser({login, password, email,})
-    const createdPost = await usersQueryRepository.findUserById(createdUserId)
+    const createdUser = await usersQueryRepository.findUserById(createdUserId)
 
-    res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
+    res.status(HTTP_STATUSES.CREATED_201).json(createdUser)
 })
 usersRouter.delete('/:id', authBasic, async (req: Request<{ id: string }>, res: Response<void>) => {
 

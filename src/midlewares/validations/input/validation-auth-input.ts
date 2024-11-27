@@ -19,6 +19,13 @@ const loginOrEmail = body("loginOrEmail")
         "Login length must be more than 3 and less than or equal to 50 symbols"
     )
 
+const confirmCode = body("code")
+    .exists()
+    .withMessage("Code is required")
+    .isString()
+    .withMessage("Type of Code must be string")
+
+
 
 const password = body("password").exists()
     .withMessage("Password is required")
@@ -31,7 +38,22 @@ const password = body("password").exists()
     })
     .withMessage("Password length must be more than 6 and less than or equal to 20 symbols")
 
-
+const email = body("email").exists()
+    .withMessage("Email is required")
+    .isString()
+    .withMessage("Type of Email must be string")
+    .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)
+    .withMessage("Incorrect Email")
+    /*.custom(
+        async (email: string) => {
+            const user = await usersRepository.findByLoginOrEmail(email);
+            if (user) {
+                throw new Error("email already exist");
+            }
+            return true;
+        })*/
 
 
 export const validationAuthInputPost = [loginOrEmail, password, inputCheckErrorsMiddleware]
+export const validationConfirmCode = [confirmCode, inputCheckErrorsMiddleware]
+export const validationEmail = [email, inputCheckErrorsMiddleware]

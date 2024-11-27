@@ -1,9 +1,8 @@
-import {postDBType, postType, usersDBType} from "../db/dbType";
-import {userInputType, usersEntityType} from "../types/usersType";
+import {usersDBType} from "../db/dbType";
+import {userInputType} from "../types/usersType";
 import bcrypt from "bcrypt"
 import {ObjectId} from "mongodb";
 import {usersRepository} from "../repositories/users-repository";
-import {usersRouter} from "../routes/users-router";
 
 
 export const usersService = {
@@ -16,20 +15,28 @@ export const usersService = {
 
         const newUser: usersDBType = {
             _id: new ObjectId(),
-            createdAt: new Date().toISOString(),
-            login: userCreatedData.login,
-            email: userCreatedData.email,
-            passwordHash,
-            passwordSalt
+            accountData: {
+                createdAt: new Date().toISOString(),
+                login: userCreatedData.login,
+                email: userCreatedData.email,
+                passwordHash,
+                passwordSalt
+            },
+            emailConfirmation: {
+                confirmationCode: null,
+                expirationData: null,
+                isConfirmed: true
+            }
         }
 
         return usersRepository.createdUser(newUser)
     },
     async checkCredentials(loginOrEmail: string, password: string): Promise<usersDBType | null> {
+        //// проверить на подтвержденный код
         const user = await usersRepository.findByLoginOrEmail(loginOrEmail)
         if (!user) return null
-        const passwordHash = await this._generateHash(password, user.passwordSalt)
-        if (user.passwordHash !== passwordHash) {
+        const passwordHash = await this._generateHash(password, user.accountData.passwordSalt)
+        if (user.accountData.passwordHash !== passwordHash) {
             return null
         }
         return user
@@ -37,7 +44,7 @@ export const usersService = {
     async deleteUser(id: string): Promise<boolean> {
         return await usersRepository.deleteUser(id)
     },
-    async findUserById(id: ObjectId):Promise<null | usersDBType> {
+    async findUserById(id: ObjectId): Promise<null | usersDBType> {
         return await usersRepository.findUserById(id)
     },
     async _generateHash(password: string, salt: string) {

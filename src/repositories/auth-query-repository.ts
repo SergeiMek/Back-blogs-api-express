@@ -7,8 +7,8 @@ export const AuthQueryRepository = {
         const user = await usersCollection.findOne({_id: new ObjectId(userId)})
         if (!user) return null
         return {
-            email: user.email,
-            login: user.login,
+            email: user.accountData.email,
+            login: user.accountData.login,
             userId: user._id
         }
     },

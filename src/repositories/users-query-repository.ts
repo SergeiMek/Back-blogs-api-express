@@ -39,9 +39,9 @@ export const usersQueryRepository = {
         if (findUser) {
             return {
                 id: findUser._id,
-                login: findUser.login,
-                email: findUser.email,
-                createdAt: findUser.createdAt
+                login: findUser.accountData.login,
+                email: findUser.accountData.email,
+                createdAt: findUser.accountData.createdAt
             }
         } else {
             return null
@@ -51,9 +51,9 @@ export const usersQueryRepository = {
         return array.map((user) => {
             return {
                 id: user._id,
-                login: user.login,
-                email: user.email,
-                createdAt: user.createdAt
+                login: user.accountData.login,
+                email: user.accountData.email,
+                createdAt: user.accountData.createdAt
             };
         });
     },

@@ -101,14 +101,7 @@ export type postDBType = {
     createdAt: string
 }
 
-export type usersDBType = {
-    _id: ObjectId
-    login: string
-    email: string
-    passwordHash: string
-    passwordSalt: string
-    createdAt: string
-}
+
 
 export type commentsDBType = {
     _id: ObjectId
@@ -119,4 +112,30 @@ export type commentsDBType = {
     }
     createdAt: string,
     postId: string
+}
+
+/*
+export type usersDBType = {
+    _id: ObjectId
+    login: string
+    email: string
+    passwordHash: string
+    passwordSalt: string
+    createdAt: string
+}*/
+
+export type usersDBType = {
+    _id: ObjectId,
+    accountData: {
+        login: string
+        email: string
+        passwordHash: string
+        passwordSalt: string
+        createdAt: string
+    }
+    emailConfirmation: {
+        confirmationCode: string | null
+        expirationData: Date | null
+        isConfirmed: boolean
+    }
 }

@@ -6,6 +6,8 @@ import bcrypt from "bcrypt";
 import {getRawAsset} from "node:sea";
 import {blogsCollection, commentsCollection, postsCollection, usersCollection} from "../../src/db/dbInMongo";
 import {commentsRepository} from "../../src/repositories/comments-repository";
+import {v4 as uuidv4} from "uuid";
+import {add} from "date-fns";
 
 
 export const createString = (length: number) => {
@@ -75,11 +77,18 @@ export async function createUsers(count: number) {
 
         users.push({
             _id: new ObjectId(),
-            createdAt: new Date().toISOString(),
-            login: 'user' + i,
-            email: 'user' + i + '@mail.ru',
-            passwordHash,
-            passwordSalt
+            accountData: {
+                createdAt: new Date().toISOString(),
+                login: 'user' + i,
+                email: 'user' + i + '@mail.ru',
+                passwordHash,
+                passwordSalt
+            },
+            emailConfirmation: {
+                confirmationCode: uuidv4(),
+                expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
+                isConfirmed: true
+            }
         })
 
     }
@@ -95,11 +104,18 @@ export async function createOneUser(email: string, login: string, password: stri
 
     return {
         _id: new ObjectId(),
-        createdAt: new Date().toISOString(),
-        login: login,
-        email: email,
-        passwordHash,
-        passwordSalt
+        accountData: {
+            createdAt: new Date().toISOString(),
+            login: login,
+            email: email,
+            passwordHash,
+            passwordSalt
+        },
+        emailConfirmation: {
+            confirmationCode: uuidv4(),
+            expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
+            isConfirmed: true
+        }
     }
 }
 
@@ -111,7 +127,7 @@ type dataCreateCommentData = {
 
 }
 
-export async function createComment(data:dataCreateCommentData) {
+export async function createComment(data: dataCreateCommentData) {
     const datasetBlog = {
         id: String(+(new Date())),
         name: 'n1',
@@ -139,7 +155,7 @@ export async function createComment(data:dataCreateCommentData) {
         content: data.content,
         commentatorInfo: {
             userId: user._id,
-            userLogin: user.login
+            userLogin: user.accountData.login
         },
         createdAt: new Date().toISOString(),
         postId: posts[0].id
@@ -147,9 +163,9 @@ export async function createComment(data:dataCreateCommentData) {
     await commentsCollection.insertOne(comment)
     return {
         commentId: comment._id,
-        userLogin: user.login,
+        userLogin: user.accountData.login,
         userPassword: data.passwordUser,
-        userEmail: user.email,
+        userEmail: user.accountData.email,
         postId: posts[0].id
     }
 }

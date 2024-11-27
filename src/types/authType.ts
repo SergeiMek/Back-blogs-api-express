@@ -9,3 +9,13 @@ export type OutputAutData = {
     login: string
     userId: ObjectId
 }
+
+export type registrationDataType = {
+    login: string
+    password: string
+    email: string
+}
+
+export type confirmationInputType ={
+
+}

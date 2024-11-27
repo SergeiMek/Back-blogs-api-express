@@ -10,12 +10,17 @@ export const SETTINGS = {
         POSTS: '/posts',
         USERS: '/users',
         AUTH: '/auth',
-        COMMENTS:'/comments'
+        COMMENTS: '/comments',
     },
     ADMIN: process.env.ADMIN || 'admin:qwerty',
     DB_NAME: process.env.DB_NAME,
     MONGO_URL: process.env.MONGO_URL || ' ',
     JWT_SECRET: process.env.MONGO_URL || '123'
+}
+
+export const EMAIL_ADAPTER_DATA = {
+    EMAIL: process.env.EMAIL,
+    PASSWORD: process.env.PASSWORD
 }
 
 export const ADMIN_LOGIN = 'admin'

@@ -42,6 +42,7 @@ export type userInputType = {
     email: string
 }
 
+/*
 export type userInputRepositoryType = {
     _id: ObjectId,
     createdAt: Date,
@@ -50,3 +51,4 @@ export type userInputRepositoryType = {
     passwordSalt: string,
     passwordHash: string
 }
+*/
