@@ -1,8 +1,8 @@
 import {req} from "./test-helpers";
-import {SETTINGS} from "../src/settings";
+import {SETTINGS} from "../../src/settings";
 import {createComment} from "./helpers/datasets";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {commentsCollection, dbMongo} from "../src/db/dbInMongo";
+import {commentsCollection, dbMongo} from "../../src/db/dbInMongo";
 import {ObjectId} from "mongodb";
 
 

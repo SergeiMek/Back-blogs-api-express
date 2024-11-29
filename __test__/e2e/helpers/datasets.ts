@@ -1,11 +1,11 @@
-import {SETTINGS} from "../../src/settings";
-import {fromUTF8ToBase64} from "../../src/midlewares/auth/auth-basic";
+import {SETTINGS} from "../../../src/settings";
+import {fromUTF8ToBase64} from "../../../src/midlewares/auth/auth-basic";
 import {ObjectId} from "mongodb";
 // @ts-ignore
 import bcrypt from "bcrypt";
 import {getRawAsset} from "node:sea";
-import {blogsCollection, commentsCollection, postsCollection, usersCollection} from "../../src/db/dbInMongo";
-import {commentsRepository} from "../../src/repositories/comments-repository";
+import {blogsCollection, commentsCollection, postsCollection, usersCollection} from "../../../src/db/dbInMongo";
+import {commentsRepository} from "../../../src/repositories/comments-repository";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
 
@@ -114,10 +114,45 @@ export async function createOneUser(email: string, login: string, password: stri
         emailConfirmation: {
             confirmationCode: uuidv4(),
             expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
-            isConfirmed: true
+            isConfirmed: false
         }
     }
 }
+
+type userLoginDataType = {
+    login: string
+    password: string
+    email: string
+    confirmationCode: string
+    isConfirmed:boolean
+}
+
+
+export async function createOneUserRegistration(data:userLoginDataType) {
+
+
+    const passwordSalt = await bcrypt.genSalt(10)
+    const passwordHash = await bcrypt.hash(data.password, passwordSalt)
+
+
+    return {
+        _id: new ObjectId(),
+        accountData: {
+            createdAt: new Date().toISOString(),
+            login: data.login,
+            email: data.email,
+            passwordHash,
+            passwordSalt
+        },
+        emailConfirmation: {
+            confirmationCode: data.confirmationCode,
+            expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
+            isConfirmed:data.isConfirmed
+        }
+    }
+}
+
+
 
 type dataCreateCommentData = {
     content: string

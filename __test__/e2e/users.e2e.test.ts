@@ -1,7 +1,7 @@
 import {req} from "./test-helpers";
-import {ADMIN_LOGIN, ADMIN_PASS, SETTINGS} from "../src/settings";
+import {ADMIN_LOGIN, ADMIN_PASS, SETTINGS} from "../../src/settings";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {dbMongo, usersCollection} from "../src/db/dbInMongo";
+import {dbMongo, usersCollection} from "../../src/db/dbInMongo";
 import {createUsers} from "./helpers/datasets";
 
 

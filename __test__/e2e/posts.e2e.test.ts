@@ -1,10 +1,10 @@
-import {db, deleteDB} from "../src/db/db";
+import {db, deleteDB} from "../../src/db/db";
 import {req} from "./test-helpers";
-import {SETTINGS} from "../src/settings";
+import {SETTINGS} from "../../src/settings";
 import {blog1, codedAuth, createOneUser, createString, dataset1} from "./helpers/datasets";
-import {postsInoutData} from "../src/types/postType";
+import {postsInoutData} from "../../src/types/postType";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {blogsCollection, dbMongo, postsCollection, usersCollection} from "../src/db/dbInMongo";
+import {blogsCollection, dbMongo, postsCollection, usersCollection} from "../../src/db/dbInMongo";
 
 
 describe('/posts', () => {

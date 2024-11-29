@@ -1,9 +1,9 @@
-import {blogInputData} from "../src/types/blogType";
+import {blogInputData} from "../../src/types/blogType";
 import {req} from "./test-helpers";
-import {SETTINGS} from "../src/settings";
+import {SETTINGS} from "../../src/settings";
 import {codedAuth, createString} from "./helpers/datasets";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {blogsCollection, dbMongo} from "../src/db/dbInMongo";
+import {blogsCollection, dbMongo} from "../../src/db/dbInMongo";
 
 
 describe('/blogs',  () => {
