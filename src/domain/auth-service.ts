@@ -138,6 +138,29 @@ export const authService = {
             data: null
         }
     },
+   /* async login(user: usersDBType): Promise<Result<null>> {
+
+
+        /!*const user = await usersRepository.findUserByConfirmCode(code)
+        if (!user) return {
+            status: ResultStatus.NotUser,
+            data: null
+        }
+        if (user.emailConfirmation.isConfirmed) return {
+            status: ResultStatus.CodeConfirmed,
+            data: null
+        }
+        if (user.emailConfirmation.expirationData! < new Date()) return {
+            status: ResultStatus.DateIsNotValid,
+            data: null
+        }*!/
+
+        const update =  await usersRepository.updateConfirmationStatus(user._id)
+        return {
+            status: ResultStatus.Success,
+            data: null
+        }
+    },*/
     async _generateHash(password: string, salt: string) {
         return await bcrypt.hash(password, salt)
     }

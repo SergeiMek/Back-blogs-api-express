@@ -8,10 +8,13 @@ import {postsRouter} from "./routes/posts-router";
 import {usersRouter} from "./routes/users-router";
 import {authRouter} from "./routes/auth-router";
 import {commentsRouter} from "./routes/comments-router";
+import cookieParser from "cookie-parser";
 
 export const app = express()
 app.use(express.json())
 app.use(cors())
+app.use(cookieParser())
+
 
 app.use(SETTINGS.PATH.VIDEOS, videosRouter)
 app.use(SETTINGS.PATH.BLOGS, blogsRouter)

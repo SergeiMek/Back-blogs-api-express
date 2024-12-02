@@ -15,7 +15,8 @@ export const SETTINGS = {
     ADMIN: process.env.ADMIN || 'admin:qwerty',
     DB_NAME: process.env.DB_NAME,
     MONGO_URL: process.env.MONGO_URL || ' ',
-    JWT_SECRET: process.env.MONGO_URL || '123'
+    JWT_SECRET: process.env.MONGO_URL || '123',
+    JWT_REFRESH_SECRET: process.env.MONGO_URL || '1234567'
 }
 
 export const EMAIL_ADAPTER_DATA = {

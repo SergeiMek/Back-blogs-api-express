@@ -13,7 +13,10 @@ import {AuthQueryRepository} from "../repositories/auth-query-repository";
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
 import {authService} from "../domain/auth-service";
 import {OutputErrorsType} from "../types/videosType";
-import {usersCollection} from "../db/dbInMongo";
+import {deviceCollection, usersCollection} from "../db/dbInMongo";
+import {devicesService} from "../domain/devices-service";
+import {ObjectId} from "mongodb";
+import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
 
 
 export const authRouter = Router({})
@@ -23,14 +26,66 @@ authRouter.post('/login', validationAuthInputPost, async (req: Request<{}, {}, a
 
     const {loginOrEmail, password} = req.body
 
-    const user = await usersService.checkCredentials(loginOrEmail, password)
-    if (user) {
-        const token = await jwtService.createJWT(user)
-        res.status(HTTP_STATUSES.OK_200).send({accessToken: token})
+    const checkCredentialsUser = await usersService.checkCredentials(loginOrEmail, password)
+    if (checkCredentialsUser) {
+        const ip = req.ip;
+        const userAgent = req.headers["user-agent"] || "unknown";
+        const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
+        const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
+        await devicesService.createDevice(newRefreshToken, ip!, userAgent)
+        res
+            .cookie("refreshToken", newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+            })
+            .status(200)
+            .json({accessToken: newAccessToken});
     } else {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
     }
 })
+authRouter.post('/logout', authMiddleware, async (req: Request, res: Response) => {
+    const cookieRefreshToken = req.cookies.refreshToken
+    debugger
+    const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
+    if (cookieRefreshTokenObj) {
+        const cookieDeviceId = cookieRefreshTokenObj.deviceId
+        await devicesService.deleteDevice(cookieDeviceId)
+        res.clearCookie('refreshToken')
+        res.sendStatus(204);
+    } else {
+        res.sendStatus(401);
+    }
+})
+authRouter.post('/refresh-token',validationRefreshToken, async (req: Request, res: Response) => {
+    const ip = req.ip!
+    const cookieRefreshToken = req.cookies.refreshToken
+
+    const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
+
+    const deviceId = cookieRefreshTokenObj!.deviceId
+    const userId = cookieRefreshTokenObj!.userId
+
+    const user = await usersService.findUserById(new ObjectId(userId))
+
+    const newAccessToken = await jwtService.createAccessTokenJWT(user!, deviceId)
+    const newRefreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
+
+    const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
+
+    const newIssuedAt = newRefreshTokenObj!.iat
+
+    await devicesService.updateDevice(ip, userId, newIssuedAt)
+
+    res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: true
+    })
+        .status(HTTP_STATUSES.OK_200)
+        .json({accessToken: newAccessToken})
+})
+
+
 authRouter.post('/registration-confirmation', validationConfirmCode, async (req: Request<{}, {}, {
     code: string
 }>, res: Response) => {
@@ -155,6 +210,10 @@ authRouter.post('/get-users', async (req: Request<{}, {}, { num: string }>, res:
     if (req.body.num === "2") {
         await usersCollection.deleteMany()
         res.sendStatus(200)
+    }
+    if (req.body.num === "3") {
+        const devise = await deviceCollection.find().toArray()
+        res.status(200).send(devise)
     }
     return
 })

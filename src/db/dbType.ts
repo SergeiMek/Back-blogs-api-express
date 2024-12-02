@@ -102,7 +102,6 @@ export type postDBType = {
 }
 
 
-
 export type commentsDBType = {
     _id: ObjectId
     content: string
@@ -138,4 +137,15 @@ export type usersDBType = {
         expirationData: Date | null
         isConfirmed: boolean
     }
+}
+
+export type deviceDBType = {
+    _id: ObjectId
+    ip: string
+    title: string
+    userId: string
+    deviceId: string
+    lastActiveDate: number
+    expirationDate: number
+    refreshToken:string
 }
