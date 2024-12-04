@@ -147,5 +147,9 @@ export type deviceDBType = {
     deviceId: string
     lastActiveDate: number
     expirationDate: number
-    refreshToken:string
+    refreshToken: string
+}
+export type blackListType = {
+    _id: ObjectId
+    token: string
 }

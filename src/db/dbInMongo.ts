@@ -1,6 +1,6 @@
 import {SETTINGS} from "../settings";
 import {Db, MongoClient} from "mongodb";
-import {blogsType, commentsDBType, deviceDBType, postType, usersDBType, videoType} from "./dbType";
+import {blackListType, blogsType, commentsDBType, deviceDBType, postType, usersDBType, videoType} from "./dbType";
 import {deleteDB} from "./db";
 
 
@@ -75,3 +75,5 @@ export const blogsCollection = db.collection<blogsType>('blogs')
 export const usersCollection = db.collection<usersDBType>('users')
 export const commentsCollection = db.collection<commentsDBType>('comments')
 export const deviceCollection = db.collection<deviceDBType>('device')
+export const blackListCollection = db.collection<blackListType>('blackList')
+

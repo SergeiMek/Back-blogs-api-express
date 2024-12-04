@@ -10,18 +10,28 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
         res.sendStatus(401)
         return
     }
-
-    const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
-
-    if (!cookieRefreshToken) {
+    const tokenBlackList = await devicesService.findTokenToBlackList(cookieRefreshToken)
+    if (tokenBlackList) {
         res.sendStatus(401)
         return
     }
 
-    const deviceId = cookieRefreshTokenObj!.deviceId
-    const cookieRefreshTokenIat = cookieRefreshTokenObj!.iat
+    const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
+
+    if (!cookieRefreshTokenObj) {
+        res.sendStatus(401)
+        return
+    }
+
+    const deviceId = cookieRefreshTokenObj.deviceId
+
+
+    const cookieRefreshTokenIat = cookieRefreshTokenObj.iat
+
 
     const dbDevice = await devicesService.findDeviceById(deviceId)
+
+
 
     if (dbDevice) {
         if (cookieRefreshTokenIat < dbDevice.lastActiveDate) {

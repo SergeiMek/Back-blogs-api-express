@@ -13,10 +13,10 @@ import {AuthQueryRepository} from "../repositories/auth-query-repository";
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
 import {authService} from "../domain/auth-service";
 import {OutputErrorsType} from "../types/videosType";
-import {deviceCollection, usersCollection} from "../db/dbInMongo";
 import {devicesService} from "../domain/devices-service";
 import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
+import {blackListCollection, deviceCollection, usersCollection} from "../db/dbInMongo";
 
 
 export const authRouter = Router({})
@@ -44,27 +44,26 @@ authRouter.post('/login', validationAuthInputPost, async (req: Request<{}, {}, a
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
     }
 })
-authRouter.post('/logout', authMiddleware, async (req: Request, res: Response) => {
+authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
-    debugger
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
         const cookieDeviceId = cookieRefreshTokenObj.deviceId
-        await devicesService.deleteDevice(cookieDeviceId)
+        const result = await devicesService.deleteDevice(cookieDeviceId)
         res.clearCookie('refreshToken')
         res.sendStatus(204);
     } else {
         res.sendStatus(401);
     }
 })
-authRouter.post('/refresh-token',validationRefreshToken, async (req: Request, res: Response) => {
+authRouter.post('/refresh-token', validationRefreshToken, async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
 
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
 
     const deviceId = cookieRefreshTokenObj!.deviceId
-    const userId = cookieRefreshTokenObj!.userId
+    const userId = cookieRefreshTokenObj!.userId.toString()
 
     const user = await usersService.findUserById(new ObjectId(userId))
 
@@ -74,8 +73,11 @@ authRouter.post('/refresh-token',validationRefreshToken, async (req: Request, re
     const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
 
     const newIssuedAt = newRefreshTokenObj!.iat
+    const device = await devicesService.findDeviceById(deviceId)
+    const oldRefreshToken = device!.refreshToken
+     await devicesService.addTokenToBlackList(oldRefreshToken)
 
-    await devicesService.updateDevice(ip, userId, newIssuedAt)
+    await devicesService.updateDevice(ip, userId, newIssuedAt, newRefreshToken)
 
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
@@ -212,7 +214,7 @@ authRouter.post('/get-users', async (req: Request<{}, {}, { num: string }>, res:
         res.sendStatus(200)
     }
     if (req.body.num === "3") {
-        const devise = await deviceCollection.find().toArray()
+        const devise = await blackListCollection.find().toArray()
         res.status(200).send(devise)
     }
     return

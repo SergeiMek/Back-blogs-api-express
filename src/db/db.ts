@@ -1,6 +1,7 @@
 import {blogsType, postType, videoType} from "./dbType";
 import {getRawAsset} from "node:sea";
 import {
+    blackListCollection,
     blogsCollection,
     commentsCollection,
     deviceCollection,
@@ -60,4 +61,5 @@ export const deleteDB = async () => {
     await usersCollection.deleteMany({})
     await commentsCollection.deleteMany({})
     await deviceCollection.deleteMany({})
+    await blackListCollection.deleteMany({})
 }
