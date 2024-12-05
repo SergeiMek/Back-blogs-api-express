@@ -8,6 +8,8 @@ import {blogsCollection, commentsCollection, postsCollection, usersCollection} f
 import {commentsRepository} from "../../../src/repositories/comments-repository";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
+// @ts-ignore
+import jwt from "jsonwebtoken"
 
 
 export const createString = (length: number) => {
