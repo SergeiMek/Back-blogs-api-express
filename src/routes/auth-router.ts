@@ -57,7 +57,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
         res.sendStatus(401);
     }
 })
-authRouter.post('/refresh-token', validationRefreshToken, rateLimiter,async (req: Request, res: Response) => {
+authRouter.post('/refresh-token', rateLimiter, validationRefreshToken,async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
 
@@ -123,7 +123,7 @@ authRouter.post('/registration-confirmation', validationConfirmCode, async (req:
     res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
 })
 
-authRouter.post('/registration', validationUsersInputPost,rateLimiter, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
+authRouter.post('/registration',rateLimiter, validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
     let {email, login, password} = req.body
     const errors: OutputErrorsType = {
         errorsMessages: []
