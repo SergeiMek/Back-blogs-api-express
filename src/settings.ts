@@ -11,6 +11,7 @@ export const SETTINGS = {
         USERS: '/users',
         AUTH: '/auth',
         COMMENTS: '/comments',
+        SECURITY: '/security',
     },
     ADMIN: process.env.ADMIN || 'admin:qwerty',
     DB_NAME: process.env.DB_NAME,

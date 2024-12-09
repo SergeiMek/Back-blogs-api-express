@@ -16,13 +16,14 @@ import {OutputErrorsType} from "../types/videosType";
 import {devicesService} from "../domain/devices-service";
 import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
-import {blackListCollection, deviceCollection, usersCollection} from "../db/dbInMongo";
+import { deviceCollection, usersCollection} from "../db/dbInMongo";
+import {rateLimiter} from "../midlewares/rate-limiter";
 
 
 export const authRouter = Router({})
 
 
-authRouter.post('/login', validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
+authRouter.post('/login',rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
     const {loginOrEmail, password} = req.body
 
@@ -56,7 +57,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
         res.sendStatus(401);
     }
 })
-authRouter.post('/refresh-token', validationRefreshToken, async (req: Request, res: Response) => {
+authRouter.post('/refresh-token', validationRefreshToken, rateLimiter,async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
 
@@ -73,11 +74,11 @@ authRouter.post('/refresh-token', validationRefreshToken, async (req: Request, r
     const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
 
     const newIssuedAt = newRefreshTokenObj!.iat
-    const device = await devicesService.findDeviceById(deviceId)
+    /*const device = await devicesService.findDeviceByDeviceId(deviceId)
     const oldRefreshToken = device!.refreshToken
-     await devicesService.addTokenToBlackList(oldRefreshToken)
+     await devicesService.addTokenToBlackList(oldRefreshToken)*/
 
-    await devicesService.updateDevice(ip, userId, newIssuedAt, newRefreshToken)
+    await devicesService.updateDevice(ip, deviceId, newIssuedAt)
 
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
@@ -122,7 +123,7 @@ authRouter.post('/registration-confirmation', validationConfirmCode, async (req:
     res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
 })
 
-authRouter.post('/registration', validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
+authRouter.post('/registration', validationUsersInputPost,rateLimiter, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
     let {email, login, password} = req.body
     const errors: OutputErrorsType = {
         errorsMessages: []
@@ -155,7 +156,7 @@ authRouter.post('/registration', validationUsersInputPost, async (req: Request<{
 
 })
 
-authRouter.post('/registration-email-resending', validationEmail, async (req: Request<{}, {}, {
+authRouter.post('/registration-email-resending', validationEmail,rateLimiter, async (req: Request<{}, {}, {
     email: string
 }>, res: Response) => {
 
@@ -214,7 +215,7 @@ authRouter.post('/get-users', async (req: Request<{}, {}, { num: string }>, res:
         res.sendStatus(200)
     }
     if (req.body.num === "3") {
-        const devise = await blackListCollection.find().toArray()
+        const devise = await deviceCollection.find().toArray()
         res.status(200).send(devise)
     }
     return

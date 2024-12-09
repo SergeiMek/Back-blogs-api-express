@@ -1,6 +1,14 @@
 import {SETTINGS} from "../settings";
 import {Db, MongoClient} from "mongodb";
-import {blackListType, blogsType, commentsDBType, deviceDBType, postType, usersDBType, videoType} from "./dbType";
+import {
+    blackListType,
+    blogsType,
+    commentsDBType,
+    deviceDBType,
+    postType, rateLimitType,
+    usersDBType,
+    videoType
+} from "./dbType";
 import {deleteDB} from "./db";
 
 
@@ -46,25 +54,6 @@ export const dbMongo = {
 
 }
 
-/*export async function runDb(url: string) {
-    let client = new MongoClient(url)
-    let db = client.db(SETTINGS.DB_NAME)
-
-    /// подключаем колекции
-    /// videosCollection = db.
-
-    try {
-        await client.connect()
-        await db.command({ping: 1})
-        console.log('OK')
-        return true
-    } catch (e) {
-        console.log(e)
-        await client.close()
-        return false
-    }
-}*/
-
 
 export const client = new MongoClient(SETTINGS.MONGO_URL)
 
@@ -75,5 +64,6 @@ export const blogsCollection = db.collection<blogsType>('blogs')
 export const usersCollection = db.collection<usersDBType>('users')
 export const commentsCollection = db.collection<commentsDBType>('comments')
 export const deviceCollection = db.collection<deviceDBType>('device')
-export const blackListCollection = db.collection<blackListType>('blackList')
+export const limitCollection = db.collection<rateLimitType>('limit')
+
 

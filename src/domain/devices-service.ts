@@ -22,30 +22,26 @@ export const devicesService = {
         const newDevice = {
             _id: new ObjectId,
             ip: ip,
-            title: 'string',
+            title: userAgent,
             userId,
             deviceId,
             lastActiveDate: issuedAt,
             expirationDate,
-            refreshToken: newRefreshToken,
         }
 
         return await devicesRepository.createDevice(newDevice)
 
     },
-    async deleteDevice(deviceId: string) {
+    async deleteDevice(deviceId: string): Promise<boolean> {
         return await devicesRepository.deleteDevice(deviceId)
     },
-    async findDeviceById(deviceId: string): Promise<deviceDBType | null> {
-        return await devicesRepository.findDeviceById(deviceId)
+    async findDeviceByDeviceId(deviceId: string): Promise<deviceDBType | null> {
+        return await devicesRepository.findDeviceByDeviceId(deviceId)
     },
-    async updateDevice(ip: string, userId: string, issuedAt: number, newRefreshToken: string): Promise<boolean> {
-        return await devicesRepository.updateDevice(ip, userId, issuedAt, newRefreshToken)
+    async updateDevice(ip: string, deviceId: string, issuedAt: number): Promise<boolean> {
+        return await devicesRepository.updateDevice(ip, deviceId, issuedAt)
     },
-    async addTokenToBlackList(token: string): Promise<boolean> {
-        return await devicesRepository.addTokenToBlackList(token)
-    },
-    async findTokenToBlackList(token: string): Promise<WithId<blackListType> | null> {
-        return await devicesRepository.findTokenToBlackList(token)
+    async deleteAllOldDevices(currentDevice: string): Promise<boolean> {
+        return await devicesRepository.deleteAllOldDevices(currentDevice)
     }
 }

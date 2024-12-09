@@ -2,6 +2,8 @@ import {app} from './app'
 import {SETTINGS} from './settings'
 import {dbMongo} from "./db/dbInMongo";
 
+
+
 const startApp = async () => {
    /// const res = await runDb(SETTINGS.MONGO_URL)
     const res = await dbMongo.run(SETTINGS.MONGO_URL)

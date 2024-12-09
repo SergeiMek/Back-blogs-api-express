@@ -113,16 +113,6 @@ export type commentsDBType = {
     postId: string
 }
 
-/*
-export type usersDBType = {
-    _id: ObjectId
-    login: string
-    email: string
-    passwordHash: string
-    passwordSalt: string
-    createdAt: string
-}*/
-
 export type usersDBType = {
     _id: ObjectId,
     accountData: {
@@ -147,9 +137,15 @@ export type deviceDBType = {
     deviceId: string
     lastActiveDate: number
     expirationDate: number
-    refreshToken: string
 }
 export type blackListType = {
     _id: ObjectId
     token: string
+}
+
+export type rateLimitType = {
+    _id: ObjectId
+    ip: string
+    URL: string
+    date: number
 }

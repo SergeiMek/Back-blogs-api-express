@@ -1,14 +1,14 @@
-import {deviceDBType} from "../db/dbType";
+import {deviceDBType, rateLimitType} from "../db/dbType";
 import {ObjectId} from "mongodb";
-import {deviceCollection} from "../db/dbInMongo";
+import {deviceCollection, limitCollection} from "../db/dbInMongo";
 
 
-export const devicesRepository = {
-    async createDevice(deviceDara: deviceDBType): Promise<ObjectId> {
-        const result = await deviceCollection.insertOne(deviceDara)
-        return result.insertedId
+export const rateRepository = {
+    async createRateLimit(item: rateLimitType): Promise<boolean> {
+        const result = await limitCollection.insertOne(item)
+        return result.acknowledged
     },
-    async deleteDevice(id: string): Promise<boolean> {
+    /*async deleteDevice(id: string): Promise<boolean> {
         const result = await deviceCollection.deleteOne({deviceId: id})
         return result.deletedCount === 1
     },
@@ -29,5 +29,5 @@ export const devicesRepository = {
     },
     _checkObjectId(id: string): boolean {
         return ObjectId.isValid(id)
-    }
+    }*/
 }
