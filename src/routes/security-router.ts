@@ -14,7 +14,7 @@ import {validationDeviceOwner} from "../midlewares/auth/validation-device-owner"
 export const securityRouter = Router({})
 
 
-securityRouter.get('/devices', validationRefreshToken, async (req: Request<{}, {}, authInputType>, res: Response) => {
+securityRouter.get('/devices', authMiddleware, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
@@ -37,13 +37,13 @@ securityRouter.delete('/devices/:deviceId', validationDeviceOwner, async (req: R
     const deleted = await devicesService.deleteDevice(req.params.deviceId)
     if (deleted) {
         res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
-        return
+
     } else {
         res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
-        return
+
     }
 })
-securityRouter.delete('/devices', validationRefreshToken, async (req: Request, res: Response) => {
+securityRouter.delete('/devices', authMiddleware, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
     if (!cookieRefreshTokeObj) {
