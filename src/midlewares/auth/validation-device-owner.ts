@@ -21,7 +21,7 @@ export const validationDeviceOwner = async (req: Request, res: Response, next: N
         return;
     }
     const deviceId = req.params.deviceId;
-    if(deviceId){
+    if(!deviceId){
         res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
         return
     }
