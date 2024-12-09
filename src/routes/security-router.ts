@@ -14,9 +14,9 @@ import {validationDeviceOwner} from "../midlewares/auth/validation-device-owner"
 export const securityRouter = Router({})
 
 
-securityRouter.get('/devices', validationRefreshToken, async (req: Request<{}, {}, authInputType>, res: Response) => {
+securityRouter.get('/devices', async (req: Request<{}, {}, authInputType>, res: Response) => {
 
-    const cookieRefreshToken = req.cookies.refreshToken
+    /*const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
     if (!cookieRefreshTokeObj) {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
@@ -24,9 +24,9 @@ securityRouter.get('/devices', validationRefreshToken, async (req: Request<{}, {
     }
 
 
-    const findDevises = await securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)
+    const findDevises = await securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)*/
 
-    res.status(200).send(findDevises)
+    res.status(200).send({})
 })
 
 securityRouter.delete('/devices/:deviceId', validationDeviceOwner, async (req: Request<{
@@ -43,7 +43,7 @@ securityRouter.delete('/devices/:deviceId', validationDeviceOwner, async (req: R
 
     }
 })
-securityRouter.delete('/devices', validationRefreshToken, async (req: Request, res: Response) => {
+securityRouter.delete('/devices', async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
     if (!cookieRefreshTokeObj) {
@@ -53,6 +53,8 @@ securityRouter.delete('/devices', validationRefreshToken, async (req: Request, r
     await devicesService.deleteAllOldDevices(cookieRefreshTokeObj.deviceId)
     res.sendStatus(204)
 })
+
+////   , validationRefreshToken
 
 
 
