@@ -37,8 +37,10 @@ securityRouter.delete('/devices/:deviceId', validationDeviceOwner, async (req: R
     const deleted = await devicesService.deleteDevice(req.params.deviceId)
     if (deleted) {
         res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+        return
     } else {
         res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        return
     }
 })
 securityRouter.delete('/devices', validationRefreshToken, async (req: Request, res: Response) => {
