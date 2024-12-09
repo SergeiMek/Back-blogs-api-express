@@ -9,6 +9,7 @@ export const devicesRepository = {
         return result.insertedId
     },
     async deleteDevice(id: string): Promise<boolean> {
+        if (this._checkObjectId(id))return false
         const result = await deviceCollection.deleteOne({deviceId: id})
         return result.deletedCount === 1
     },
