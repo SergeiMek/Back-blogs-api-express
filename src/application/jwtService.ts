@@ -1,16 +1,15 @@
 import {usersDBType} from "../db/dbType";
-import jwt, {JwtPayload} from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 import {SETTINGS} from "../settings";
 import {ObjectId} from "mongodb";
 import {v4 as uuidv4} from 'uuid';
 
 export const jwtService = {
     async createAccessTokenJWT(user: usersDBType, deviceId: string = uuidv4()) {
-        return jwt.sign({userId: user._id, deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '10s'})
+        return jwt.sign({userId: user._id, deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '10s'}).toString()
     },
     async createRefreshTokenJWT(user: usersDBType, deviceId: string = uuidv4()) {
-        const refreshToken = jwt.sign({userId: user._id, deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '20s'})
-        return {refreshToken}
+        return  jwt.sign({userId: user._id, deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '20s'}).toString()
     },
     async getUserIdByToken(token: string) {
         try {

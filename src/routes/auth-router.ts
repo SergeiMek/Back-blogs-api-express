@@ -32,10 +32,10 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         const ip = req.ip;
         const userAgent = req.headers["user-agent"] || "unknown";
         const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
-        const refreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
-        await devicesService.createDevice(refreshToken.refreshToken, ip!, userAgent)
+        const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
+        await devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
-        res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true,})
+        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
             res.status(200).json({accessToken: newAccessToken});
 
     } else {
@@ -68,9 +68,9 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
 
     const newAccessToken = await jwtService.createAccessTokenJWT(user!, deviceId)
-    const refreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
+    const newRefreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
 
-    const newRefreshTokenObj = await jwtService.verifyToken(refreshToken)
+    const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
 
 
     const newIssuedAt = newRefreshTokenObj!.iat
@@ -80,7 +80,7 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
     await devicesService.updateDevice(ip, deviceId, newIssuedAt)
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('refreshToken', newRefreshToken, {
         secure: true,
         httpOnly: true,
     })
