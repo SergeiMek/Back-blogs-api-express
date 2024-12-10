@@ -25,7 +25,7 @@ export const authRouter = Router({})
 
 authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
-    const {loginOrEmail, password} = req.body
+    /*const {loginOrEmail, password} = req.body
 
     const checkCredentialsUser = await usersService.checkCredentials(loginOrEmail, password)
     if (checkCredentialsUser) {
@@ -37,17 +37,32 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
 
         res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
             res.status(200).json({accessToken: newAccessToken});
-        return
+
     } else {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+    }*/
+    const {loginOrEmail, password} = req.body
+    const checkCredentialsUser = await usersService.checkCredentials(loginOrEmail, password)
+    if (!checkCredentialsUser) {
+        res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+        return
     }
+    const ip = req.ip;
+    const userAgent = req.headers["user-agent"] || "unknown";
+    const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
+    const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
+    await devicesService.createDevice(newRefreshToken, ip!, userAgent)
+
+    res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
+    res.status(200).send({accessToken: newAccessToken});
+    return
 })
 authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
-       // const cookieDeviceId = cookieRefreshTokenObj.deviceId
-       // await devicesService.deleteDevice(cookieDeviceId)
+       const cookieDeviceId = cookieRefreshTokenObj.deviceId
+        await devicesService.deleteDevice(cookieDeviceId)
         res.clearCookie('refreshToken')
         res.sendStatus(204);
     } else {
