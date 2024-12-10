@@ -23,7 +23,7 @@ import {rateLimiter} from "../midlewares/rate-limiter";
 export const authRouter = Router({})
 
 
-authRouter.post('/login', validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
+authRouter.post('/login',rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
     const {loginOrEmail, password} = req.body
 
