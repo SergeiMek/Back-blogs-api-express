@@ -29,7 +29,7 @@ securityRouter.get('/devices',  validationRefreshToken,async (req: Request<{}, {
     res.status(200).send(findDevises)
 })
 
-securityRouter.delete('/devices/:deviceId', validationDeviceOwner, async (req: Request<{
+securityRouter.delete('/devices/:deviceId', validationRefreshToken, async (req: Request<{
     deviceId: string
 }>, res: Response) => {
 

@@ -1,6 +1,6 @@
 import {MongoMemoryServer} from "mongodb-memory-server";
 import {dbMongo, deviceCollection, usersCollection} from "../../src/db/dbInMongo";
-import {createOneUser, creatTokenTest} from "./helpers/datasets";
+import {createOneUser} from "./helpers/datasets";
 import {req} from "./test-helpers";
 import {SETTINGS} from "../../src/settings";
 import {devicesService} from "../../src/domain/devices-service";
