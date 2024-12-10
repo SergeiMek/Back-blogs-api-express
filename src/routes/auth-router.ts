@@ -23,9 +23,9 @@ import {rateLimiter} from "../midlewares/rate-limiter";
 export const authRouter = Router({})
 
 
-authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
+authRouter.post('/login', /*rateLimiter, validationAuthInputPost, */async (req: Request<{}, {}, authInputType>, res: Response) => {
 
-    /*const {loginOrEmail, password} = req.body
+    const {loginOrEmail, password} = req.body
 
     const checkCredentialsUser = await usersService.checkCredentials(loginOrEmail, password)
     if (checkCredentialsUser) {
@@ -40,24 +40,10 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
 
     } else {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
-    }*/
-    const {loginOrEmail, password} = req.body
-    const checkCredentialsUser = await usersService.checkCredentials(loginOrEmail, password)
-    if (!checkCredentialsUser) {
-        res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
-        return
     }
-    const ip = req.ip;
-    const userAgent = req.headers["user-agent"] || "unknown";
-    const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
-    const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
-    await devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
-    res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
-    res.status(200).send({accessToken: newAccessToken});
-    return
 })
-authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
+authRouter.post('/logout',/* validationRefreshToken,*/ async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
@@ -69,7 +55,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
         res.sendStatus(401);
     }
 })
-authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (req: Request, res: Response) => {
+authRouter.post('/refresh-token',/* rateLimiter, validationRefreshToken,*/ async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
 
@@ -138,7 +124,7 @@ authRouter.post('/registration-confirmation', validationConfirmCode, async (req:
     res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
 })
 
-authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
+authRouter.post('/registration',/* rateLimiter, validationUsersInputPost,*/ async (req: Request<{}, {}, registrationDataType>, res: Response) => {
     let {email, login, password} = req.body
     const errors: OutputErrorsType = {
         errorsMessages: []
@@ -171,7 +157,7 @@ authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (r
 
 })
 
-authRouter.post('/registration-email-resending', validationEmail, rateLimiter, async (req: Request<{}, {}, {
+authRouter.post('/registration-email-resending', /*validationEmail, rateLimiter,*/ async (req: Request<{}, {}, {
     email: string
 }>, res: Response) => {
 
