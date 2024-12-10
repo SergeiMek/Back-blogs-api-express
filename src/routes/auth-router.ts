@@ -16,14 +16,14 @@ import {OutputErrorsType} from "../types/videosType";
 import {devicesService} from "../domain/devices-service";
 import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
-import { deviceCollection, usersCollection} from "../db/dbInMongo";
+import {deviceCollection, usersCollection} from "../db/dbInMongo";
 import {rateLimiter} from "../midlewares/rate-limiter";
 
 
 export const authRouter = Router({})
 
 
-authRouter.post('/login',rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
+authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
     const {loginOrEmail, password} = req.body
 
@@ -57,7 +57,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
         res.sendStatus(401);
     }
 })
-authRouter.post('/refresh-token', rateLimiter, validationRefreshToken,async (req: Request, res: Response) => {
+authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
 
@@ -73,7 +73,10 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken,async (req
     const newRefreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
 
     const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
-
+    if(!newRefreshTokenObj){
+        res.sendStatus(401)
+        return
+    }
 
     const newIssuedAt = newRefreshTokenObj!.iat
     /*const device = await devicesService.findDeviceByDeviceId(deviceId)
@@ -88,6 +91,7 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken,async (req
     })
         .status(HTTP_STATUSES.OK_200)
         .json({accessToken: newAccessToken})
+    return
 })
 
 
@@ -125,7 +129,7 @@ authRouter.post('/registration-confirmation', validationConfirmCode, async (req:
     res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
 })
 
-authRouter.post('/registration',rateLimiter, validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
+authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
     let {email, login, password} = req.body
     const errors: OutputErrorsType = {
         errorsMessages: []
@@ -158,7 +162,7 @@ authRouter.post('/registration',rateLimiter, validationUsersInputPost, async (re
 
 })
 
-authRouter.post('/registration-email-resending', validationEmail,rateLimiter, async (req: Request<{}, {}, {
+authRouter.post('/registration-email-resending', validationEmail, rateLimiter, async (req: Request<{}, {}, {
     email: string
 }>, res: Response) => {
 
