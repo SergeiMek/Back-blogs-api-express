@@ -2,6 +2,11 @@ import {config} from 'dotenv'
 
 config() // добавление переменных из файла .env в process.env
 
+if(!process.env.MONGO_URL){
+    throw new Error('! Url doesn\'t found')
+}
+
+
 export const SETTINGS = {
     PORT: process.env.PORT || 3000,
     PATH: {
