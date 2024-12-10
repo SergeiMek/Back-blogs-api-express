@@ -25,6 +25,11 @@ app.use(SETTINGS.PATH.USERS, usersRouter)
 app.use(SETTINGS.PATH.AUTH, authRouter)
 app.use(SETTINGS.PATH.COMMENTS, commentsRouter)
 app.use(SETTINGS.PATH.SECURITY, securityRouter)
+
+app.get("/", async (req, res) => {
+    res.send("Express on Vercel")
+})
+
 app.delete('/testing/all-data', async (req, res) => {
     await deleteDB()
     res.sendStatus(204)
