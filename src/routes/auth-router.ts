@@ -82,21 +82,12 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
     await devicesService.updateDevice(ip, deviceId, newIssuedAt)
 
-    /*res.cookie('refreshToken', newRefreshToken, {
+    res.cookie('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: true
     })
     .status(HTTP_STATUSES.OK_200)
-        .json({accessToken: newAccessToken})*/
-
-
-    res.cookie('refreshToken', newRefreshToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge:20
-    })
-        res.status(HTTP_STATUSES.OK_200)
-        .send({accessToken: newAccessToken})
+        .json({accessToken: newAccessToken})
 
 })
 
