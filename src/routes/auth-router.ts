@@ -67,21 +67,15 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken,async (req
     const userId = cookieRefreshTokenObj!.userId.toString()
 
     const user = await usersService.findUserById(new ObjectId(userId))
-    if(!user){
-        res.sendStatus(401)
-        return
-    }
 
-    const newAccessToken = await jwtService.createAccessTokenJWT(user, deviceId)
-    const newRefreshToken = await jwtService.createAccessTokenJWT(user, deviceId)
+
+    const newAccessToken = await jwtService.createAccessTokenJWT(user!, deviceId)
+    const newRefreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
 
     const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
-    if(!newRefreshTokenObj){
-        res.sendStatus(401)
-        return
-    }
 
-    const newIssuedAt = newRefreshTokenObj.iat
+
+    const newIssuedAt = newRefreshTokenObj!.iat
     /*const device = await devicesService.findDeviceByDeviceId(deviceId)
     const oldRefreshToken = device!.refreshToken
      await devicesService.addTokenToBlackList(oldRefreshToken)*/

@@ -9,7 +9,7 @@ export const jwtService = {
         return jwt.sign({userId: user._id,deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '10s'})
     },
     async createRefreshTokenJWT(user: usersDBType,deviceId:string = uuidv4()) {
-        return  jwt.sign({userId: user._id,deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '100s'})
+        return  jwt.sign({userId: user._id,deviceId}, SETTINGS.JWT_SECRET, {expiresIn: '20s'})
     },
     async getUserIdByToken(token: string) {
         try {
