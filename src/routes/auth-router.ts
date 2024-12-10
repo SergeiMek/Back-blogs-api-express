@@ -73,10 +73,7 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
     const newRefreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
 
     const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
-    if(!newRefreshTokenObj){
-        res.sendStatus(401)
-        return
-    }
+
 
     const newIssuedAt = newRefreshTokenObj!.iat
     /*const device = await devicesService.findDeviceByDeviceId(deviceId)
@@ -89,7 +86,7 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
         httpOnly: true,
         secure: true
     })
-        .status(HTTP_STATUSES.OK_200)
+    res.status(HTTP_STATUSES.OK_200)
         .json({accessToken: newAccessToken})
     return
 })
