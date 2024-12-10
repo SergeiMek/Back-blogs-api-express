@@ -19,6 +19,7 @@ app.use(cookieParser())
     //app.set('trust proxy', true)
 
 
+
 app.use(SETTINGS.PATH.VIDEOS, videosRouter)
 app.use(SETTINGS.PATH.BLOGS, blogsRouter)
 app.use(SETTINGS.PATH.POSTS, postsRouter)
