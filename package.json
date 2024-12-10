@@ -26,8 +26,7 @@
     "watch": "tsc -w",
     "dev": "yarn nodemon --inspect dist/index.js",
     "jest": "jest -i",
-    "jest:coverage": "jest -i --coverage",
-    "start" :  "node app.js"
+    "jest:coverage": "jest -i --coverage"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
