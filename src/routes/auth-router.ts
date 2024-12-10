@@ -32,10 +32,10 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         const ip = req.ip;
         const userAgent = req.headers["user-agent"] || "unknown";
         const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
-        const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
-        await devicesService.createDevice(newRefreshToken, ip!, userAgent)
+        const refreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
+        await devicesService.createDevice(refreshToken.refreshToken, ip!, userAgent)
 
-        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
+        res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true,})
             res.status(200).json({accessToken: newAccessToken});
 
     } else {
@@ -43,7 +43,7 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
     }
 
 })
-authRouter.post('/logout'/*, validationRefreshToken*/, async (req: Request, res: Response) => {
+authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
@@ -68,9 +68,9 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
 
     const newAccessToken = await jwtService.createAccessTokenJWT(user!, deviceId)
-    const newRefreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
+    const refreshToken = await jwtService.createAccessTokenJWT(user!, deviceId)
 
-    const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken)
+    const newRefreshTokenObj = await jwtService.verifyToken(refreshToken)
 
 
     const newIssuedAt = newRefreshTokenObj!.iat
@@ -80,9 +80,9 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
     await devicesService.updateDevice(ip, deviceId, newIssuedAt)
 
-    res.cookie('refreshToken', newRefreshToken, {
+    res.cookie('refreshToken', refreshToken, {
+        secure: true,
         httpOnly: true,
-        secure: true
     })
     .status(HTTP_STATUSES.OK_200)
         .json({accessToken: newAccessToken})
