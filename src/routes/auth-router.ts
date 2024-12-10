@@ -34,13 +34,10 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
         const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
         await devicesService.createDevice(newRefreshToken, ip!, userAgent)
-        res
-            .cookie("refreshToken", newRefreshToken, {
-                httpOnly: true,
-                secure: true,
-            })
-            .status(200)
-            .json({accessToken: newAccessToken});
+
+        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
+            res.status(200).json({accessToken: newAccessToken});
+        return
     } else {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
     }
@@ -49,8 +46,8 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
-        const cookieDeviceId = cookieRefreshTokenObj.deviceId
-        const result = await devicesService.deleteDevice(cookieDeviceId)
+       // const cookieDeviceId = cookieRefreshTokenObj.deviceId
+       // await devicesService.deleteDevice(cookieDeviceId)
         res.clearCookie('refreshToken')
         res.sendStatus(204);
     } else {
