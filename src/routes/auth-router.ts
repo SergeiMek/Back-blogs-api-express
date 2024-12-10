@@ -35,7 +35,7 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
         await devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
-        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,})
+        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,sameSite: 'none'})
             res.status(200).json({accessToken: newAccessToken});
 
     } else {
@@ -55,7 +55,6 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
         res.sendStatus(401);
     }
 })
-/*
 authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
@@ -75,21 +74,21 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
 
     const newIssuedAt = newRefreshTokenObj!.iat
-    /!*const device = await devicesService.findDeviceByDeviceId(deviceId)
+    /*const device = await devicesService.findDeviceByDeviceId(deviceId)
     const oldRefreshToken = device!.refreshToken
-     await devicesService.addTokenToBlackList(oldRefreshToken)*!/
+     await devicesService.addTokenToBlackList(oldRefreshToken)*/
 
     await devicesService.updateDevice(ip, deviceId, newIssuedAt)
 
     res.cookie('refreshToken', newRefreshToken, {
         secure: true,
         httpOnly: true,
+        sameSite: 'none'
     })
     .status(HTTP_STATUSES.OK_200)
         .json({accessToken: newAccessToken})
 
 })
-*/
 
 
 authRouter.post('/registration-confirmation', validationConfirmCode, async (req: Request<{}, {}, {
