@@ -1,16 +1,10 @@
 {
-  "version" :  2 ,
-  "builds" :  [
-    {
-      "src" :  "app.js" ,
-      "use" :  "@vercel/node" ,
-      "config" :  {  "includeFiles" :  [ "dist/index.js" ]  }
-    }
-  ] ,
-  "routes" :  [
-    {
-      "src" :  "/(.*)" ,
-      "dest" :  "app.ts"
-    }
+  "version": 2,
+  "name": "express",
+  "builds": [
+    { "src": "src/index.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "src/index.ts" }
   ]
 }
