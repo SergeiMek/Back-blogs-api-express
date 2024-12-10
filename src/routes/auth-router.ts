@@ -92,9 +92,10 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
     res.cookie('refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: true
+        secure: true,
+        maxAge:20
     })
-        .status(HTTP_STATUSES.OK_200)
+        res.status(HTTP_STATUSES.OK_200)
         .send({accessToken: newAccessToken})
 
 })
