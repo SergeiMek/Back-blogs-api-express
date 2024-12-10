@@ -10,11 +10,7 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
         res.sendStatus(401)
         return
     }
-   /* const tokenBlackList = await devicesService.findTokenToBlackList(cookieRefreshToken)
-    if (tokenBlackList) {
-        res.sendStatus(401)
-        return
-    }*/
+
 
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
 
@@ -30,20 +26,21 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
     const cookieRefreshTokenIat = cookieRefreshTokenObj.iat
 
 
-    /*if (findDevise) {
-        if (cookieRefreshTokenIat < findDevise.lastActiveDate) {
-            res.sendStatus(401)
-            return
-        }
-    } else {
-        res.sendStatus(401)
-        return
-    }*/
-    if(findDevise){
+   /* if(findDevise){
         if(cookieRefreshTokenIat !== findDevise.lastActiveDate){
             res.sendStatus(401)
             return
         }
+    }*/
+
+    if (findDevise) {
+        if (cookieRefreshTokenIat < findDevise.lastActiveDate) {
+            res.sendStatus(401);
+            return;
+        }
+    } else {
+        res.sendStatus(401);
+        return;
     }
 
     next()
