@@ -14,7 +14,7 @@ import {validationDeviceOwner} from "../midlewares/auth/validation-device-owner"
 export const securityRouter = Router({})
 
 
-securityRouter.get('/devices',  validationRefreshToken,async (req: Request<{}, {}, authInputType>, res: Response) => {
+securityRouter.get('/devices', validationRefreshToken, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
@@ -32,16 +32,23 @@ securityRouter.get('/devices',  validationRefreshToken,async (req: Request<{}, {
 securityRouter.delete('/devices/:deviceId', validationRefreshToken, async (req: Request<{
     deviceId: string
 }>, res: Response) => {
+    const cookieRefreshToken = req.cookies.refreshToken
 
+    const isDeletedStatus = await devicesService.deleteDeviceById(req.params.deviceId, cookieRefreshToken)
 
-    const deleted = await devicesService.deleteDevice(req.params.deviceId)
-    if (deleted) {
-        res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
-
-    } else {
+    if (isDeletedStatus.status === 2) {
         res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
-
     }
+    if (isDeletedStatus.status === 4) {
+        res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+    }
+    if (isDeletedStatus.status === 1) {
+        res.sendStatus(HTTP_STATUSES.FORBIDDEN_403)
+    }
+    if (isDeletedStatus.status === 0) {
+        res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+    }
+    res.sendStatus(500)
 })
 securityRouter.delete('/devices', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken

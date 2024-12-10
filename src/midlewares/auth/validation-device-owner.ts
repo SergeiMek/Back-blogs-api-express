@@ -1,7 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {HTTP_STATUSES} from "../../settings";
 import {jwtService} from "../../application/jwtService";
-import {usersService} from "../../domain/users-service";
 import {devicesService} from "../../domain/devices-service";
 
 
