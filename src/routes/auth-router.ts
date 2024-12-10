@@ -23,7 +23,7 @@ import {rateLimiter} from "../midlewares/rate-limiter";
 export const authRouter = Router({})
 
 
-authRouter.post('/login', /*rateLimiter, validationAuthInputPost, */async (req: Request<{}, {}, authInputType>, res: Response) => {
+authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Request<{}, {}, authInputType>, res: Response) => {
 
     const {loginOrEmail, password} = req.body
 
@@ -43,7 +43,7 @@ authRouter.post('/login', /*rateLimiter, validationAuthInputPost, */async (req: 
     }
 
 })
-authRouter.post('/logout',/* validationRefreshToken,*/ async (req: Request, res: Response) => {
+authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
@@ -55,7 +55,7 @@ authRouter.post('/logout',/* validationRefreshToken,*/ async (req: Request, res:
         res.sendStatus(401);
     }
 })
-authRouter.post('/refresh-token',/* rateLimiter, validationRefreshToken,*/ async (req: Request, res: Response) => {
+authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
 
@@ -124,7 +124,7 @@ authRouter.post('/registration-confirmation', validationConfirmCode, async (req:
     res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
 })
 
-authRouter.post('/registration',/* rateLimiter, validationUsersInputPost,*/ async (req: Request<{}, {}, registrationDataType>, res: Response) => {
+authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
     let {email, login, password} = req.body
     const errors: OutputErrorsType = {
         errorsMessages: []
@@ -157,7 +157,7 @@ authRouter.post('/registration',/* rateLimiter, validationUsersInputPost,*/ asyn
 
 })
 
-authRouter.post('/registration-email-resending', /*validationEmail, rateLimiter,*/ async (req: Request<{}, {}, {
+authRouter.post('/registration-email-resending', validationEmail, rateLimiter, async (req: Request<{}, {}, {
     email: string
 }>, res: Response) => {
 
