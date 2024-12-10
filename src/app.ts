@@ -11,6 +11,7 @@ import {commentsRouter} from "./routes/comments-router";
 import cookieParser from "cookie-parser";
 import {securityRouter} from "./routes/security-router";
 
+
 export const app = express()
 app.use(express.json())
 app.use(cors())
