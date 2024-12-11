@@ -35,8 +35,6 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
         await devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
-        console.log('acsesToken', newAccessToken)
-        console.log('refreshToken', newRefreshToken)
         res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
             res.status(200).json({accessToken: newAccessToken});
 
