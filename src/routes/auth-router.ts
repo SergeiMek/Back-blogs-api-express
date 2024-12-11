@@ -35,7 +35,9 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
         await devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
-        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true,sameSite: 'none'})
+        console.log('acsesToken', newAccessToken)
+        console.log('refreshToken', newRefreshToken)
+        res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
             res.status(200).json({accessToken: newAccessToken});
 
     } else {
@@ -58,9 +60,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
 authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (req: Request, res: Response) => {
     const ip = req.ip!
     const cookieRefreshToken = req.cookies.refreshToken
-
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
-
     const deviceId = cookieRefreshTokenObj!.deviceId
     const userId = cookieRefreshTokenObj!.userId.toString()
 
@@ -82,8 +82,7 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 
     res.cookie('refreshToken', newRefreshToken, {
         secure: true,
-        httpOnly: true,
-        sameSite: 'none'
+        httpOnly: true
     })
     .status(HTTP_STATUSES.OK_200)
         .json({accessToken: newAccessToken})

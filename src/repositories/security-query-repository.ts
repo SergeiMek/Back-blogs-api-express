@@ -17,7 +17,7 @@ export const securityQueryRepository = {
             return {
                 ip: devise.ip,
                 title: devise.title,
-                lastActiveDate: String(devise.lastActiveDate),
+                lastActiveDate: new Date(devise.lastActiveDate * 1000).toISOString(),
                 deviceId: devise.deviceId
             };
         });
