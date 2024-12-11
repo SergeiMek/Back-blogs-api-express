@@ -43,7 +43,7 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
     }
 
 })
-authRouter.post('/logout', /*validationRefreshToken,*/ async (req: Request, res: Response) => {
+authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
