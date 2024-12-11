@@ -22,7 +22,7 @@ export const rateLimiter = async (
         URL: endpoint,
         date: {$gte: tenSecondsAgo}
     })
-    if (count >= 5) {
+    if (count > 5) {
         res.sendStatus(429)
         return
     }
