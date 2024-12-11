@@ -26,14 +26,14 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
     const cookieRefreshTokenIat = cookieRefreshTokenObj.iat
 
 
-    if(findDevise){
+  /*  if(findDevise){
         if(cookieRefreshTokenIat !== findDevise.lastActiveDate){
             res.sendStatus(401)
             return
         }
-    }
+    }*/
 
-   /* if (findDevise) {
+    if (findDevise) {
         if (cookieRefreshTokenIat < findDevise.lastActiveDate) {
             res.sendStatus(401);
             return;
@@ -42,6 +42,5 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
         res.sendStatus(401);
         return;
     }
-*/
     next()
 }

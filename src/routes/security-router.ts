@@ -1,14 +1,10 @@
 import {Request, Response, Router} from "express";
 import {HTTP_STATUSES} from "../settings";
 import {authInputType} from "../types/authType";
-import {usersService} from "../domain/users-service";
 import {jwtService} from "../application/jwtService";
-import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
 import {devicesService} from "../domain/devices-service";
-import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
 import {securityQueryRepository} from "../repositories/security-query-repository";
-import {validationDeviceOwner} from "../midlewares/auth/validation-device-owner";
 
 
 export const securityRouter = Router({})
