@@ -45,13 +45,13 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
     }
 
 })
-authRouter.post('/logout', /*validationRefreshToken,*/ async (req: Request, res: Response) => {
+authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Response) => {
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
        const cookieDeviceId = cookieRefreshTokenObj.deviceId
         await devicesService.deleteDevice(cookieDeviceId)
-        res.clearCookie('refreshToken')
+       // res.clearCookie('refreshToken')
         res.sendStatus(204);
     } else {
         res.sendStatus(401);
