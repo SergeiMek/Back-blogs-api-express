@@ -53,6 +53,5 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
         return
     }
 
-
     next()
 }

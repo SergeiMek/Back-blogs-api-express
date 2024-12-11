@@ -19,10 +19,9 @@ securityRouter.get('/devices', validationRefreshToken, async (req: Request<{}, {
         return
     }
 
-
     const findDevises = await securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)
-
     res.status(200).send(findDevises)
+    return
 })
 
 securityRouter.delete('/devices/:deviceId', validationRefreshToken, async (req: Request<{
@@ -34,15 +33,19 @@ securityRouter.delete('/devices/:deviceId', validationRefreshToken, async (req: 
 
     if (isDeletedStatus.status === 2) {
         res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        return
     }
     if (isDeletedStatus.status === 4) {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+        return
     }
     if (isDeletedStatus.status === 1) {
         res.sendStatus(HTTP_STATUSES.FORBIDDEN_403)
+        return
     }
     if (isDeletedStatus.status === 0) {
         res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+        return
     }
     res.sendStatus(500)
 })
@@ -55,6 +58,7 @@ securityRouter.delete('/devices', validationRefreshToken, async (req: Request, r
     }
     await devicesService.deleteAllOldDevices(cookieRefreshTokeObj.deviceId)
     res.sendStatus(204)
+    return
 })
 
 

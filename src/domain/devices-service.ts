@@ -98,8 +98,6 @@ export const devicesService = {
         return await devicesRepository.updateDevice(ip, deviceId, issuedAt)
     },
     async deleteAllOldDevices(currentDevice: string): Promise<boolean> {
-
-
         return await devicesRepository.deleteAllOldDevices(currentDevice)
     }
 }
