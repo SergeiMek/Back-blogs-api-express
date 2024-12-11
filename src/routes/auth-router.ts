@@ -51,7 +51,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
     if (cookieRefreshTokenObj) {
        const cookieDeviceId = cookieRefreshTokenObj.deviceId
         await devicesService.deleteDevice(cookieDeviceId)
-       // res.clearCookie('refreshToken')
+        res.clearCookie('refreshToken')
         res.sendStatus(204);
     } else {
         res.sendStatus(401);
