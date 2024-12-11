@@ -88,7 +88,7 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
 })
 
 
-authRouter.post('/registration-confirmation', validationConfirmCode, async (req: Request<{}, {}, {
+authRouter.post('/registration-confirmation',rateLimiter, validationConfirmCode, async (req: Request<{}, {}, {
     code: string
 }>, res: Response) => {
     const errors: OutputErrorsType = {
@@ -155,7 +155,7 @@ authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (r
 
 })
 
-authRouter.post('/registration-email-resending', validationEmail, rateLimiter, async (req: Request<{}, {}, {
+authRouter.post('/registration-email-resending',rateLimiter, validationEmail,  async (req: Request<{}, {}, {
     email: string
 }>, res: Response) => {
 
