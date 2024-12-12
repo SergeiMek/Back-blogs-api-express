@@ -3,13 +3,18 @@ import {fromUTF8ToBase64} from "../../../src/midlewares/auth/auth-basic";
 import {ObjectId} from "mongodb";
 // @ts-ignore
 import bcrypt from "bcrypt";
-import {getRawAsset} from "node:sea";
-import {blogsCollection, commentsCollection, postsCollection, usersCollection} from "../../../src/db/dbInMongo";
-import {commentsRepository} from "../../../src/repositories/comments-repository";
+import {
+    blogsCollection,
+    commentsCollection,
+    deviceCollection,
+    postsCollection,
+    usersCollection
+} from "../../../src/db/dbInMongo";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
 // @ts-ignore
 import jwt from "jsonwebtoken"
+import {usersDBType} from "../../../src/db/dbType";
 
 
 export const createString = (length: number) => {
@@ -126,11 +131,11 @@ type userLoginDataType = {
     password: string
     email: string
     confirmationCode: string
-    isConfirmed:boolean
+    isConfirmed: boolean
 }
 
 
-export async function createOneUserRegistration(data:userLoginDataType) {
+export async function createOneUserRegistration(data: userLoginDataType) {
 
 
     const passwordSalt = await bcrypt.genSalt(10)
@@ -149,11 +154,10 @@ export async function createOneUserRegistration(data:userLoginDataType) {
         emailConfirmation: {
             confirmationCode: data.confirmationCode,
             expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
-            isConfirmed:data.isConfirmed
+            isConfirmed: data.isConfirmed
         }
     }
 }
-
 
 
 type dataCreateCommentData = {
@@ -206,3 +210,53 @@ export async function createComment(data: dataCreateCommentData) {
         postId: posts[0].id
     }
 }
+
+type loginUsertype = {
+    user: usersDBType,
+    ip: string,
+    userAgent: string,
+    refreshToken: string,
+    timeData: number
+}
+
+
+export const loginUser = async (data: loginUsertype) => {
+
+
+    const now = new Date()
+    const dataIat = new Date(now.getTime() + 30 * data.timeData)
+    const dataExp = new Date(new Date(now.getTime() + 30 * 1000))
+
+    const newDevice = {
+        _id: new ObjectId,
+        ip: data.ip,
+        title: data.userAgent,
+        userId: data.user._id.toString(),
+        deviceId: uuidv4(),
+        lastActiveDate: Number(dataIat),
+        expirationDate: Number(dataExp)
+    }
+
+
+    await deviceCollection.insertOne(newDevice)
+
+    /*return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+    }*/
+    return {
+        refreshToken: data.refreshToken, refreshData: {
+            userId: data.user._id.toString(),
+            deviceId: uuidv4(),
+            lastActiveDate: Number(dataIat),
+            expirationDate: Number(dataExp)
+
+        }
+
+
+
+}}
+
+
+
+

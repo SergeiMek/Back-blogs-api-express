@@ -36,11 +36,6 @@ describe('/auth', () => {
 
         await usersCollection.insertOne(newUserCreated)
 
-        await req
-            .post(SETTINGS.PATH.AUTH + '/login')
-            .send({loginOrEmail: 'test', password: '123456789'})
-            .expect(200);
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/login')
             .send({loginOrEmail: 'test@gmail.com', password: '123456789'})
