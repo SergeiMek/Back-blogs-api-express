@@ -52,3 +52,4 @@ const email = body("email").exists()
 
 
 export const validationUsersInputPost = [loginValidation,password,email, inputCheckErrorsMiddleware]
+

@@ -127,6 +127,10 @@ export type usersDBType = {
         expirationData: Date | null
         isConfirmed: boolean
     }
+    passwordRecovery: {
+        recoveryCode: string | null
+        expirationDate: Date | null
+    }
 }
 
 export type deviceDBType = {

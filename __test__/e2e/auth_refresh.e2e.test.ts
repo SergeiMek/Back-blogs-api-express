@@ -1,36 +1,31 @@
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {dbMongo, deviceCollection, usersCollection} from "../../src/db/dbInMongo";
 import {createOneUser} from "./helpers/datasets";
 import {req} from "./test-helpers";
 import {SETTINGS} from "../../src/settings";
-import {devicesService} from "../../src/domain/devices-service";
-import {devicesRepository} from "../../src/repositories/devices-repository";
-import {ObjectId} from "mongodb";
+import mongoose from "mongoose";
+import {deleteDB, usersMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";
 
 describe('/auth-refresh', () => {
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()
-        await dbMongo.run(mongoServer.getUri());
+        //await dbMongo.run(mongoServer.getUri());
+        await mongoose.connect(mongoServer.getUri())
     })
 
     beforeEach(async () => {
-        await dbMongo.drop();
+        await deleteDB()
     })
 
     afterAll(async () => {
-        await dbMongo.stop();
-
-    })
-
-    afterAll(done => {
-        done()
+        //done()
+        await mongoose.connection.close()
     })
 
     it('Refresh token correct: STATUS 200', async () => {
 
 
         const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
-        await usersCollection.insertOne(newUserCreated)
+        await usersMongooseModel.create(newUserCreated)
 
           const login =  await req
               .post(SETTINGS.PATH.AUTH + '/login')
@@ -65,7 +60,7 @@ describe('/auth-refresh', () => {
 
 
         const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
-        await usersCollection.insertOne(newUserCreated)
+        await usersMongooseModel.create(newUserCreated)
 
         const login = await req
             .post(SETTINGS.PATH.AUTH + '/login')

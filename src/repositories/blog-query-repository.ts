@@ -1,6 +1,6 @@
 import {blogsDBType, blogsType} from "../db/dbType";
 import {blogDataFindType, blogQueryOutputType} from "../types/blogType";
-import {blogsCollection} from "../db/dbInMongo";
+import {blogsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 export const BlogsQueryRepository = {
     async getAllBlogs(queryData: blogDataFindType): Promise<blogQueryOutputType> {
@@ -11,8 +11,8 @@ export const BlogsQueryRepository = {
             filter.name = {$regex: queryData.searchNameTerm, $options: 'i'}
         }
 
-        const blogs = await blogsCollection.find(filter).skip((queryData.pageNumber - 1) * queryData.pageSize).limit(queryData.pageSize).sort({[queryData.sortBy]: queryData.sortDirection === 'asc' ? 1 : -1}).toArray()
-        const blogCount = await blogsCollection.countDocuments(filter)
+        const blogs = await blogsMongooseModel.find(filter).skip((queryData.pageNumber - 1) * queryData.pageSize).limit(queryData.pageSize).sort({[queryData.sortBy]: queryData.sortDirection === 'asc' ? 1 : -1})
+        const blogCount = await blogsMongooseModel.countDocuments(filter)
 
         return {
             pagesCount: Math.ceil(blogCount / queryData.pageSize),
@@ -25,7 +25,7 @@ export const BlogsQueryRepository = {
 
     },
     async findBlogById(id: string): Promise<blogsType | null> {
-        const blog = await blogsCollection.findOne({id: id})
+        const blog = await blogsMongooseModel.findOne({id: id})
         if (blog) {
             return {
                 id: blog.id,

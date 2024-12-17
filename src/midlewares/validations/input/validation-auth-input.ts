@@ -38,6 +38,24 @@ const password = body("password").exists()
     })
     .withMessage("Password length must be more than 6 and less than or equal to 20 symbols")
 
+const recoveryCode = body("recoveryCode").exists()
+    .withMessage("recovery code is required")
+    .isString()
+    .withMessage("Type of recovery code must be string")
+
+
+const newPassword = body("newPassword").exists()
+    .withMessage("Password is required")
+    .isString()
+    .withMessage("Type of Password must be string")
+    .trim()
+    .isLength({
+        min: 6,
+        max: 20
+    })
+    .withMessage("Password length must be more than 6 and less than or equal to 20 symbols")
+
+
 const email = body("email").exists()
     .withMessage("Email is required")
     .isString()
@@ -57,3 +75,4 @@ const email = body("email").exists()
 export const validationAuthInputPost = [loginOrEmail, password, inputCheckErrorsMiddleware]
 export const validationConfirmCode = [confirmCode, inputCheckErrorsMiddleware]
 export const validationEmail = [email, inputCheckErrorsMiddleware]
+export  const validationRecoveryPassword = [recoveryCode,newPassword,inputCheckErrorsMiddleware]

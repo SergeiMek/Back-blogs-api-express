@@ -1,19 +1,15 @@
-import {db} from "../db/db";
 import {newVideoCreatedDataType, videosInputType} from "../types/videosType";
-import {videosCollection} from "../db/dbInMongo";
-import {blogsDBType, videoDBType, videoType} from "../db/dbType";
-import {promises} from "dns";
-import Document from "mongodb";
+import {videoDBType, videoType} from "../db/dbType";
+import {videosMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 export const videoRepository = {
     async getAllVideo(): Promise<videoType[]> {
-        //return db.videos
-        const videos = await videosCollection.find({}).toArray()    ///// {projection:{_id:0}} скрыть _id
-        return this._videoMapping(videos)
+        return videosMongooseModel.find({}).select('-_id').lean()
+
     },
     async findVideoById(id: number): Promise<videoType | null> {
 
-        let video = await videosCollection.findOne({id: id})
+        const video = await videosMongooseModel.findOne({id: id})
         if (video) {
             return {
                 id: video.id,
@@ -28,12 +24,10 @@ export const videoRepository = {
         } else {
             return null
         }
-
-
-        // return db.videos.find(v => v.id === id)
-
     },
     async createdVideo(newVideoCreatedData: newVideoCreatedDataType): Promise<videoType> {
+
+
         let today = new Date()
         let tomorrow = new Date()
         tomorrow.setDate(today.getDate() + 1)
@@ -47,13 +41,23 @@ export const videoRepository = {
             publicationDate: tomorrow.toISOString(),
             availableResolutions: newVideoCreatedData.availableResolutions
         }
-        const result = await videosCollection.insertOne(newProduct)
-        // @ts-ignore
-        delete newProduct._id
-        return newProduct
+        const smartVideoModel = new videosMongooseModel(newProduct)
+        await smartVideoModel.save()
+        return {
+            id: smartVideoModel.id,
+            title: smartVideoModel.title,
+            author: smartVideoModel.author,
+            canBeDownloaded: false,
+            minAgeRestriction: null,
+            createdAt: smartVideoModel.createdAt,
+            publicationDate: smartVideoModel.publicationDate,
+            availableResolutions: newVideoCreatedData.availableResolutions
+        }
+
+
     },
     async updateVideo(videoId: number, updateVideoData: videosInputType): Promise<boolean> {
-        ///const video = this.findVideoById(videoId)
+
         const updatedParamsVideo = {
             title: updateVideoData.title,
             author: updateVideoData.author,
@@ -61,13 +65,13 @@ export const videoRepository = {
             minAgeRestriction: updateVideoData.minAgeRestriction,
             availableResolutions: updateVideoData.availableResolutions
         }
+        const result = await videosMongooseModel.updateOne({id: videoId}, {$set: updatedParamsVideo})
 
-        const result = await videosCollection.updateOne({id: videoId}, {$set: updatedParamsVideo})
+        return result.modifiedCount === 1
 
-        return result.matchedCount === 1
     },
     async deleteVideo(id: number): Promise<boolean> {
-        const result = await videosCollection.deleteOne({id: id})
+        const result = await videosMongooseModel.deleteOne({id})
         return result.deletedCount === 1
 
     },

@@ -1,28 +1,31 @@
 import {req} from "./test-helpers";
 import {ADMIN_LOGIN, ADMIN_PASS, SETTINGS} from "../../src/settings";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {dbMongo, usersCollection} from "../../src/db/dbInMongo";
 import {createUsers} from "./helpers/datasets";
+import mongoose from "mongoose";
+import {usersMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";
 
 
 describe('/users', () => {
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()
-        await dbMongo.run(mongoServer.getUri());
+        //await dbMongo.run(mongoServer.getUri());
+        await mongoose.connect(mongoServer.getUri())
     })
 
     beforeEach(async () => {
-        await dbMongo.drop();
+        // await dbMongo.drop();
+       // await postsMongooseModel.deleteMany()
+       // await blogsMongooseModel.deleteMany()
+        await usersMongooseModel.deleteMany()
     })
 
     afterAll(async () => {
-        await dbMongo.stop();
-
+        //done()
+        await mongoose.connection.close()
     })
 
-    afterAll(done => {
-        done()
-    })
+
 
     it('shouldn`t create user without authorization: STATUS 401', async () => {
         await req
@@ -49,7 +52,7 @@ describe('/users', () => {
     it('should get post pagination', async () => {
 
         const usersArray = await createUsers(45)
-        await usersCollection.insertMany(usersArray)
+        await usersMongooseModel.insertMany(usersArray)
 
 
         const res = await req

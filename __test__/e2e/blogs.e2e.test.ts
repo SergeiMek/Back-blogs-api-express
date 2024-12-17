@@ -3,42 +3,41 @@ import {req} from "./test-helpers";
 import {SETTINGS} from "../../src/settings";
 import {codedAuth, createString} from "./helpers/datasets";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {blogsCollection, dbMongo} from "../../src/db/dbInMongo";
+import mongoose from "mongoose";
+import {blogsMongooseModel, videosMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";
 
 
-describe('/blogs',  () => {
+
+describe('/blogs', () => {
 
 
-   /* beforeAll(async () => { // очистка базы данных перед началом тестирования
+    /* beforeAll(async () => { // очистка базы данных перед началом тестирования
 
-        const server = await MongoMemoryServer.create()
-        const url = server.getUri()
-        await runDb(url)
-        await blogsCollection.deleteMany({})
-    })*/
+         const server = await MongoMemoryServer.create()
+         const url = server.getUri()
+         await runDb(url)
+         await blogsCollection.deleteMany({})
+     })*/
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()
-        await dbMongo.run(mongoServer.getUri());
+        //await dbMongo.run(mongoServer.getUri());
+        await mongoose.connect(mongoServer.getUri())
+        await videosMongooseModel.deleteMany()
     })
 
     beforeEach(async () => {
-        await dbMongo.drop();
+        // await dbMongo.drop();
     })
 
     afterAll(async () => {
-        await dbMongo.stop();
-
+        //done()
+        await mongoose.connection.close()
     })
-
-    afterAll(done => {
-        done()
-    })
-
 
 
     it('should create', async () => {
         // setDB()
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
 
         const newBlog: blogInputData = {
             name: 'n1',
@@ -54,7 +53,7 @@ describe('/blogs',  () => {
 
         //console.log(res.body)
 
-        const blogs = await blogsCollection.find({}, {projection: {_id: 0}}).toArray()
+        const blogs = await blogsMongooseModel.find({}, {_id: 0}).lean()
 
         expect(res.body.name).toEqual(newBlog.name)
         expect(res.body.description).toEqual(newBlog.description)
@@ -66,7 +65,7 @@ describe('/blogs',  () => {
     it('shouldn\'t create 401', async () => {
         //setDB()
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
         const newBlog: blogInputData = {
             name: 'n1',
@@ -80,14 +79,14 @@ describe('/blogs',  () => {
             .expect(401)
 
         // console.log(res.body)
-        const blogs = await blogsCollection.find().toArray()
+        const blogs = await blogsMongooseModel.find()
         expect(blogs.length).toEqual(0)
     })
 
     it('search term for blog name', async () => {
         //setDB() // очистка базы данных если нужно
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
 
         const blogs = [{
@@ -121,7 +120,7 @@ describe('/blogs',  () => {
                 websiteUrl: 'https://some.com'
             }
         ]
-        await blogsCollection.insertMany(blogs)
+        await blogsMongooseModel.insertMany(blogs)
 
         const res = await req
             .get(SETTINGS.PATH.BLOGS + '?searchNameTerm=ki')
@@ -137,7 +136,7 @@ describe('/blogs',  () => {
     })
     it('shouldn\'t create', async () => {
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
         const newBlog: blogInputData = {
             name: createString(16),
@@ -152,7 +151,7 @@ describe('/blogs',  () => {
             .expect(400)
 
         //console.log(res.body.errorsMessages)
-        const blogs = await blogsCollection.find().toArray()
+        const blogs = await blogsMongooseModel.find()
 
         expect(res.body.errorsMessages.length).toEqual(3)
         expect(res.body.errorsMessages[0].field).toEqual('name')
@@ -164,7 +163,7 @@ describe('/blogs',  () => {
     it('should get post in blog', async () => {
         //setDB() // очистка базы данных если нужно
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
         const newBlog: blogInputData = {
             name: 'n1',
@@ -195,7 +194,7 @@ describe('/blogs',  () => {
     it('should get blogs pagination', async () => {
         //setDB() // очистка базы данных если нужно
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
 
         const blogs = [...new Array(300)].map((_, index) => ({
@@ -206,7 +205,7 @@ describe('/blogs',  () => {
             description: 'n1',
             websiteUrl: 'https://some.com'
         }))
-        await blogsCollection.insertMany(blogs)
+        await blogsMongooseModel.insertMany(blogs)
 
         const res = await req
             .get(SETTINGS.PATH.BLOGS + '?pageNumber=5&pageSize=7')
@@ -225,7 +224,7 @@ describe('/blogs',  () => {
     it('created post in blog', async () => {
         //setDB() // очистка базы данных если нужно
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
         const newBlog: blogInputData = {
             name: 'n1',
@@ -272,7 +271,7 @@ describe('/blogs',  () => {
     it('should get empty array', async () => {
         //setDB() // очистка базы данных если нужно
 
-        await blogsCollection.deleteMany({})
+        await blogsMongooseModel.deleteMany({})
 
         const res = await req
             .get(SETTINGS.PATH.BLOGS)
@@ -294,7 +293,10 @@ describe('/blogs',  () => {
         }
 
 
-        await blogsCollection.insertOne(dataset)
+        /// await blogsMongooseModel.insertOne(dataset)
+
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
 
         // @ts-ignore
         delete dataset._id
@@ -325,7 +327,10 @@ describe('/blogs',  () => {
             isMembership: false,
             createdAt: new Date().toISOString()
         }
-        await blogsCollection.insertOne(dataset)
+        //await blogsCollection.insertOne(dataset)
+
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
 
         const res = await req
             .get(SETTINGS.PATH.BLOGS + '/1')
@@ -342,7 +347,10 @@ describe('/blogs',  () => {
             isMembership: false,
             createdAt: new Date().toISOString()
         }
-        await blogsCollection.insertOne(dataset)
+        /// await blogsCollection.insertOne(dataset)
+
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
 
         // @ts-ignore
         delete dataset._id
@@ -357,7 +365,7 @@ describe('/blogs',  () => {
     })
     it('should del', async () => {
         //setDB(dataset1)
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
         const dataset = {
             id: String(+(new Date())),
             name: 'n1',
@@ -366,7 +374,10 @@ describe('/blogs',  () => {
             isMembership: false,
             createdAt: new Date().toISOString()
         }
-        await blogsCollection.insertOne(dataset)
+        //await blogsCollection.insertOne(dataset)
+
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
 
         const res = await req
             .delete(SETTINGS.PATH.BLOGS + '/' + dataset.id)
@@ -374,13 +385,13 @@ describe('/blogs',  () => {
             .expect(204) // проверка на ошибку
 
         // console.log(res.body)
-        const deleted = await blogsCollection.find().toArray()
+        const deleted = await blogsMongooseModel.find()
 
         expect(deleted).toEqual([])
     })
     it('shouldn\'t del', async () => {
         // setDB()
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
 
         const res = await req
             .delete(SETTINGS.PATH.BLOGS + '/1')
@@ -392,7 +403,7 @@ describe('/blogs',  () => {
     it('shouldn\'t del 401', async () => {
         //setDB()
 
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
 
         const res = await req
             .delete(SETTINGS.PATH.BLOGS + '/1')
@@ -412,8 +423,9 @@ describe('/blogs',  () => {
             isMembership: false,
             createdAt: new Date().toISOString()
         }
-        await blogsCollection.insertOne(dataset)
-
+        /// await blogsMongooseModel.insertOne(dataset)
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
 
         const blog: blogInputData = {
             name: 'n2',
@@ -429,7 +441,7 @@ describe('/blogs',  () => {
 
         console.log(res.body)
 
-        const blogData = await blogsCollection.findOne({id: dataset.id})
+        const blogData = await blogsMongooseModel.findOne({id: dataset.id}).select('-_id').lean()
 
 
         expect(blogData).toEqual({
@@ -444,7 +456,7 @@ describe('/blogs',  () => {
     })
     it('shouldn\'t update 404', async () => {
         /// setDB()
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
 
         const blog: blogInputData = {
             name: 'n1',
@@ -462,7 +474,7 @@ describe('/blogs',  () => {
 
     it('shouldn\'t update2', async () => {
         //setDB(dataset1)
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
 
         const dataset = {
             id: String(+(new Date())),
@@ -472,7 +484,12 @@ describe('/blogs',  () => {
             isMembership: false,
             createdAt: new Date().toISOString()
         }
-        await blogsCollection.insertOne(dataset)
+
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
+
+
+        ///await blogsCollection.insertOne(dataset)
 
         // @ts-ignore
         delete dataset._id
@@ -489,7 +506,7 @@ describe('/blogs',  () => {
             .send(blog)
             .expect(400) // проверка на ошибку
 
-        const createdBlog = await blogsCollection.findOne({id: dataset.id}, {projection: {_id: 0}})
+        const createdBlog = await blogsMongooseModel.findOne({id: dataset.id}, {_id: 0}).lean()
         // console.log(res.body)
 
         expect(createdBlog).toEqual(dataset)
@@ -500,7 +517,7 @@ describe('/blogs',  () => {
     })
     it('shouldn\'t update 401', async () => {
         //setDB(dataset1)
-        await blogsCollection.deleteMany()
+        await blogsMongooseModel.deleteMany()
         const dataset = {
             id: String(+(new Date())),
             name: 'n1',
@@ -509,7 +526,9 @@ describe('/blogs',  () => {
             isMembership: false,
             createdAt: new Date().toISOString()
         }
-        await blogsCollection.insertOne(dataset)
+        //  await blogsCollection.insertOne(dataset)
+        const smartBlogModel = new blogsMongooseModel(dataset)
+        await smartBlogModel.save()
 
         // @ts-ignore
         delete dataset._id
@@ -527,7 +546,7 @@ describe('/blogs',  () => {
             .expect(401) // проверка на ошибку
 
 
-        const createdBlog = await blogsCollection.findOne({id: dataset.id}, {projection: {_id: 0}})
+        const createdBlog = await blogsMongooseModel.findOne({id: dataset.id}, {_id: 0}).lean()
         // console.log(res.body)
 
         expect(createdBlog).toEqual(dataset)

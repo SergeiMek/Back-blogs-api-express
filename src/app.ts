@@ -2,7 +2,6 @@ import express from 'express'
 import cors from 'cors'
 import {SETTINGS} from "./settings";
 import {videosRouter} from "./routes/videosRouter";
-import {deleteDB} from "./db/db";
 import {blogsRouter} from "./routes/blogs-router";
 import {postsRouter} from "./routes/posts-router";
 import {usersRouter} from "./routes/users-router";
@@ -10,6 +9,7 @@ import {authRouter} from "./routes/auth-router";
 import {commentsRouter} from "./routes/comments-router";
 import cookieParser from "cookie-parser";
 import {securityRouter} from "./routes/security-router";
+import {deleteDB} from "./db/mongooseSchema/mongooseSchema";
 
 
 export const app = express()

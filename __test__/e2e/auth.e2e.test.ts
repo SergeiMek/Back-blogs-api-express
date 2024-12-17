@@ -1,29 +1,28 @@
 import {req} from "./test-helpers";
 import {SETTINGS} from "../../src/settings";
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {dbMongo, usersCollection} from "../../src/db/dbInMongo";
+
 import {createOneUser, createOneUserRegistration} from "./helpers/datasets";
 import {emailAdapter} from "../../src/adapters/email-adapter";
+import mongoose from "mongoose";
+import {deleteDB, usersMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";
 
 
 
 describe('/auth', () => {
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()
-        await dbMongo.run(mongoServer.getUri());
+        //await dbMongo.run(mongoServer.getUri());
+        await mongoose.connect(mongoServer.getUri())
     })
 
     beforeEach(async () => {
-        await dbMongo.drop();
+        await deleteDB()
     })
 
     afterAll(async () => {
-        await dbMongo.stop();
-
-    })
-
-    afterAll(done => {
-        done()
+        //done()
+        await mongoose.connection.close()
     })
 
     emailAdapter.sendEmail = jest.fn().mockImplementation((email: string, subject: string, message: string) => Promise.resolve())
@@ -34,7 +33,7 @@ describe('/auth', () => {
 
         const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
 
-        await usersCollection.insertOne(newUserCreated)
+        await usersMongooseModel.create(newUserCreated)
 
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/login')
@@ -46,7 +45,7 @@ describe('/auth', () => {
     it('get information about current user ', async () => {
         const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
 
-        await usersCollection.insertOne(newUserCreated)
+        await usersMongooseModel.create(newUserCreated)
 
         const loginUser = await req
             .post(SETTINGS.PATH.AUTH + '/login')
@@ -79,7 +78,7 @@ describe('/auth', () => {
 
         const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
 
-        await usersCollection.insertOne(newUserCreated)
+        await usersMongooseModel.create(newUserCreated)
 
         await req
             .post(SETTINGS.PATH.AUTH + '/login')
@@ -110,7 +109,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUser(userLoginData.email, userLoginData.login, userLoginData.password)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration')
@@ -174,7 +173,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
 
 
@@ -196,7 +195,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
 
 
@@ -221,7 +220,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
 
 
@@ -246,7 +245,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
 
 
@@ -271,7 +270,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
 
 
@@ -295,7 +294,7 @@ describe('/auth', () => {
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
-        await usersCollection.insertOne(createdUser)
+        await usersMongooseModel.create(createdUser)
 
 
 

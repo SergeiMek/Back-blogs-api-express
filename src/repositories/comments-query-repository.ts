@@ -1,7 +1,7 @@
 import {commentsDBType} from "../db/dbType";
-import {commentsCollection, postsCollection} from "../db/dbInMongo";
 import {CommentsOutputType, findCommentsData, outputCommentType} from "../types/commentsType";
 import {ObjectId} from "mongodb";
+import {commentsMongooseModel, postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 enum ResultStatus {
     Success = 0,
@@ -19,7 +19,7 @@ type Result<T> = {
 export const commentsQueryRepository = {
     async getAllComments(data: findCommentsData): Promise<Result<CommentsOutputType | null>> {
 
-        const post = await postsCollection.findOne({id: data.postId})
+        const post = await postsMongooseModel.findOne({id: data.postId})
         if (!post) {
             return {
                 status: ResultStatus.NotFound,
@@ -33,8 +33,8 @@ export const commentsQueryRepository = {
             filter.postId = data.postId
         }
 
-        const findComment = await commentsCollection.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).toArray()
-        const totalCount = await commentsCollection.countDocuments(filter)
+        const findComment = await commentsMongooseModel.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).lean()
+        const totalCount = await postsMongooseModel.countDocuments(filter)
         const pageCount = Math.ceil(totalCount / data.pageSize)
 
 
@@ -53,7 +53,7 @@ export const commentsQueryRepository = {
     },
     async getCommentById(id: string): Promise<outputCommentType | null> {
         if (!this._checkObjectId(id)) return null;
-        const comment = await commentsCollection.findOne({_id: new ObjectId(id)})
+        const comment = await commentsMongooseModel.findOne({_id: new ObjectId(id)}).lean()
         if (comment) {
             return {
                 id: comment._id,

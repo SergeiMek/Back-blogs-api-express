@@ -1,7 +1,7 @@
 import {usersDBType} from "../db/dbType";
-import {usersCollection} from "../db/dbInMongo";
 import {usersEntityType, usersOutputType, usersQueryOutputType} from "../types/usersType";
 import {ObjectId} from "mongodb";
+import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
 export const usersQueryRepository = {
@@ -19,8 +19,8 @@ export const usersQueryRepository = {
         }
 
 
-        const findUsers = await usersCollection.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).toArray()
-        const totalCount = await usersCollection.countDocuments(filter)
+        const findUsers = await usersMongooseModel.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).lean()
+        const totalCount = await usersMongooseModel.countDocuments(filter)
         const pageCount = Math.ceil(totalCount / data.pageSize)
 
         return {
@@ -35,7 +35,7 @@ export const usersQueryRepository = {
     async findUserById(id: string): Promise<usersEntityType | null> {
         if (!this._checkObjectId(id)) return null;
 
-        const findUser = await usersCollection.findOne({_id: new ObjectId(id)})
+        const findUser = await usersMongooseModel.findOne({_id: new ObjectId(id)})
         if (findUser) {
             return {
                 id: findUser._id,

@@ -1,6 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {rateService} from "../domain/rate-servise";
-import {limitCollection} from "../db/dbInMongo";
+import {limitsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+
 
 
 export const rateLimiter = async (
@@ -17,7 +18,7 @@ export const rateLimiter = async (
 
     const tenSecondsAgo = Number(new Date(Date.now() - 10 * 1000))
 
-    const count = await limitCollection.countDocuments({
+    const count = await limitsMongooseModel.countDocuments({
         ip: ip,
         URL: endpoint,
         date: {$gte: tenSecondsAgo}

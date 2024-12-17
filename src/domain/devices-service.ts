@@ -1,12 +1,7 @@
-import {blackListType, deviceDBType, usersDBType} from "../db/dbType";
-import {v4 as uuidv4} from "uuid/dist/esm";
-import jwt from "jsonwebtoken";
-import {SETTINGS} from "../settings";
-import {ObjectId, WithId} from "mongodb";
-import {DeviceViewModel} from "../types/diviceType";
+import {deviceDBType} from "../db/dbType";
+import {ObjectId} from "mongodb";
 import {jwtService} from "../application/jwtService";
 import {devicesRepository} from "../repositories/devices-repository";
-import {deviceCollection} from "../db/dbInMongo";
 
 
 enum ResultStatus {

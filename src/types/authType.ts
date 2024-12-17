@@ -16,6 +16,8 @@ export type registrationDataType = {
     email: string
 }
 
-export type confirmationInputType ={
+export type recoveryPasswordBodyType = {
+    newPassword: string
+    recoveryCode: string
 
 }

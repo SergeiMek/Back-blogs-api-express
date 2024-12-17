@@ -3,6 +3,8 @@ import {HTTP_STATUSES, SETTINGS} from '../../src/settings'
 import {inputVideoType} from "../../src/types/videosType";
 import {dbMongo, videosCollection} from "../../src/db/dbInMongo";
 import {MongoMemoryServer} from "mongodb-memory-server";
+import mongoose from "mongoose";
+import {videosMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";
 
 
 describe(SETTINGS.PATH.VIDEOS, () => {
@@ -19,26 +21,23 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 */
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()
-        await dbMongo.run(mongoServer.getUri());
+        //await dbMongo.run(mongoServer.getUri());
+        await mongoose.connect(mongoServer.getUri())
+        await videosMongooseModel.deleteMany()
     })
 
     beforeEach(async () => {
-        await dbMongo.drop();
+       // await dbMongo.drop();
     })
 
     afterAll(async () => {
-        await dbMongo.stop();
-
-    })
-
-    afterAll(done => {
-        done()
+        //done()
+        await mongoose.connection.close()
     })
 
 
     it('should get empty array', async () => {
-        await videosCollection.deleteMany({}) // очистка базы данных если нужно
-
+        await videosMongooseModel.deleteMany()
         const res = await req
             .get(SETTINGS.PATH.VIDEOS)
             .expect(HTTP_STATUSES.OK_200) // проверяем наличие эндпоинта
@@ -63,9 +62,9 @@ describe(SETTINGS.PATH.VIDEOS, () => {
             }]
         }
 
-        await videosCollection.deleteMany({})
+        await videosMongooseModel.deleteMany()
         // @ts-ignore
-        await videosCollection.insertMany(dataset1.videos)
+        await videosMongooseModel.insertMany(dataset1.videos)
 
 
         // @ts-ignore
@@ -79,16 +78,8 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         expect(res.body.length).toBe(1)
         expect(res.body[0]).toEqual(dataset1.videos[0])
     })
-})
-
-
-describe(SETTINGS.PATH.VIDEOS, () => {
-    /*  beforeAll(async () => { // очистка базы данных перед началом тестирования
-          setDB()
-      })*/
-//post
     it('should create', async () => {
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
@@ -118,7 +109,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
     })
 
     it('shouldn\'t find', async () => {
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
         let dataset1 = {
             videos: [{
                 id: +(new Date()),
@@ -137,7 +128,9 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         // @ts-ignore
         //setDB(dataset1)
 
-        await  videosCollection.insertOne(dataset1.videos[0])
+        //await  videosMongooseModel.insertOne(dataset1.videos[0])
+        const smartUserModel = new videosMongooseModel(dataset1.videos[0])
+        await smartUserModel.save()
 
         const res = await req
             .get(SETTINGS.PATH.VIDEOS + '/1')
@@ -148,7 +141,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
     it('should create incorrect title ', async () => {
 
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1000000000000000000000000000000000000000000000000000000000000000000000',
@@ -175,7 +168,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
     it('should create incorrect author ', async () => {
         //setDB()
 
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
@@ -201,9 +194,9 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
 
     it('should create incorrect availableResolutions ', async () => {
-      //  setDB()
+        //  setDB()
 
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
             author: 'a10',
@@ -225,8 +218,8 @@ describe(SETTINGS.PATH.VIDEOS, () => {
         })
     })
     it('should create incorrect availableResolutions 2 ', async () => {
-       // setDB()
-        await videosCollection.deleteMany()
+        // setDB()
+        await videosMongooseModel.deleteMany()
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
             author: 'a10',
@@ -247,23 +240,11 @@ describe(SETTINGS.PATH.VIDEOS, () => {
             }]
         })
     })
-})
-
-
-
-
-describe(SETTINGS.PATH.VIDEOS, () => {
-    // обнавление (put)
-
-    /* beforeAll(async () => { // очистка базы данных перед началом тестирования
-         setDB()
-     })*/
-
     it('should update  video', async () => {
 
-       // setDB()
+        // setDB()
 
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
@@ -324,7 +305,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
     it('no right Id', async () => {
 
         //setDB()
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
 
         const newVideo: inputVideoType /*InputVideoType*/ = {
             title: 't1',
@@ -370,20 +351,232 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
 
     })
-})
+    it('should update  video', async () => {
+
+        // setDB()
+
+        await videosMongooseModel.deleteMany()
+
+        const newVideo: inputVideoType /*InputVideoType*/ = {
+            title: 't1',
+            author: 'a1',
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+            // ...
+        }
+
+        const res = await req
+            .post(SETTINGS.PATH.VIDEOS)
+            .send(newVideo) // отправка данных
+            .expect(HTTP_STATUSES.CREATED_201)
+
+        console.log(res.body)
+
+        expect(res.body.availableResolutions).toEqual(newVideo.availableResolutions)
+
+        const get = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(get.body)
 
 
+        expect(get.body.length).toBe(1)
+        expect(get.body[0].title).toEqual(newVideo.title)
+        // console.log(get.body[0].id)
+
+        let updateVideo = {
+            title: get.body[0].title,
+            author: get.body[0].author,
+            canBeDownloaded: true,
+            minAgeRestriction: 18,
+            publicationDate: new Date().toISOString(),
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+        }
 
 
-describe(SETTINGS.PATH.VIDEOS, () => {
-    // удаление (delete)
+        const put = await req
+            .put(SETTINGS.PATH.VIDEOS + '/' + String(get.body[0].id))
+            .send(updateVideo)
+            .expect(HTTP_STATUSES.NO_CONTEND_204)
 
-    /* beforeAll(async () => { // очистка базы данных перед началом тестирования
-         setDB()
-     })*/
+        const getAfterPut = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(getAfterPut.body)
+
+        expect(getAfterPut.body.length).toBe(1)
+        expect(getAfterPut.body[0].canBeDownloaded).toEqual(true)
+        expect(getAfterPut.body[0].minAgeRestriction).toEqual(18)
+        // console.log(get.body[0].id)
+
+
+    })
+
+    it('no right Id', async () => {
+
+        //setDB()
+        await videosMongooseModel.deleteMany()
+
+        const newVideo: inputVideoType /*InputVideoType*/ = {
+            title: 't1',
+            author: 'a1',
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+            // ...
+        }
+
+        const res = await req
+            .post(SETTINGS.PATH.VIDEOS)
+            .send(newVideo) // отправка данных
+            .expect(HTTP_STATUSES.CREATED_201)
+
+        console.log(res.body)
+
+        expect(res.body.availableResolutions).toEqual(newVideo.availableResolutions)
+
+        const get = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(get.body)
+
+
+        expect(get.body.length).toBe(1)
+        expect(get.body[0].title).toEqual(newVideo.title)
+        // console.log(get.body[0].id)
+
+        let updateVideo = {
+            title: get.body[0].title,
+            author: get.body[0].author,
+            canBeDownloaded: true,
+            minAgeRestriction: 18,
+            publicationDate: new Date().toISOString(),
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+        }
+
+
+        const put = await req
+            .put(SETTINGS.PATH.VIDEOS + '/' + '1')
+            .send(updateVideo)
+            .expect(HTTP_STATUSES.NOT_FOUNT_404)
+
+
+    })
+
+    it('should update  video', async () => {
+
+        // setDB()
+
+        await videosMongooseModel.deleteMany()
+
+        const newVideo: inputVideoType /*InputVideoType*/ = {
+            title: 't1',
+            author: 'a1',
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+            // ...
+        }
+
+        const res = await req
+            .post(SETTINGS.PATH.VIDEOS)
+            .send(newVideo) // отправка данных
+            .expect(HTTP_STATUSES.CREATED_201)
+
+        console.log(res.body)
+
+        expect(res.body.availableResolutions).toEqual(newVideo.availableResolutions)
+
+        const get = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(get.body)
+
+
+        expect(get.body.length).toBe(1)
+        expect(get.body[0].title).toEqual(newVideo.title)
+        // console.log(get.body[0].id)
+
+        let updateVideo = {
+            title: get.body[0].title,
+            author: get.body[0].author,
+            canBeDownloaded: true,
+            minAgeRestriction: 18,
+            publicationDate: new Date().toISOString(),
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+        }
+
+
+        const put = await req
+            .put(SETTINGS.PATH.VIDEOS + '/' + String(get.body[0].id))
+            .send(updateVideo)
+            .expect(HTTP_STATUSES.NO_CONTEND_204)
+
+        const getAfterPut = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(getAfterPut.body)
+
+        expect(getAfterPut.body.length).toBe(1)
+        expect(getAfterPut.body[0].canBeDownloaded).toEqual(true)
+        expect(getAfterPut.body[0].minAgeRestriction).toEqual(18)
+        // console.log(get.body[0].id)
+
+
+    })
+
+    it('no right Id', async () => {
+
+        //setDB()
+        await videosMongooseModel.deleteMany()
+
+        const newVideo: inputVideoType /*InputVideoType*/ = {
+            title: 't1',
+            author: 'a1',
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+            // ...
+        }
+
+        const res = await req
+            .post(SETTINGS.PATH.VIDEOS)
+            .send(newVideo) // отправка данных
+            .expect(HTTP_STATUSES.CREATED_201)
+
+        console.log(res.body)
+
+        expect(res.body.availableResolutions).toEqual(newVideo.availableResolutions)
+
+        const get = await req
+            .get(SETTINGS.PATH.VIDEOS)
+            .expect(HTTP_STATUSES.OK_200)
+
+        console.log(get.body)
+
+
+        expect(get.body.length).toBe(1)
+        expect(get.body[0].title).toEqual(newVideo.title)
+        // console.log(get.body[0].id)
+
+        let updateVideo = {
+            title: get.body[0].title,
+            author: get.body[0].author,
+            canBeDownloaded: true,
+            minAgeRestriction: 18,
+            publicationDate: new Date().toISOString(),
+            availableResolutions: ['P144' /*Resolutions.P144*/]
+        }
+
+
+        const put = await req
+            .put(SETTINGS.PATH.VIDEOS + '/' + '1')
+            .send(updateVideo)
+            .expect(HTTP_STATUSES.NOT_FOUNT_404)
+
+
+    })
 
     it('delete video', async () => {
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
         ///setDB()
 
         const get = await req
@@ -435,7 +628,7 @@ describe(SETTINGS.PATH.VIDEOS, () => {
     it('no right Id', async () => {
 
         //setDB()
-        await videosCollection.deleteMany()
+        await videosMongooseModel.deleteMany()
 
         const get = await req
             .get(SETTINGS.PATH.VIDEOS)
@@ -452,3 +645,6 @@ describe(SETTINGS.PATH.VIDEOS, () => {
 
     })
 })
+
+
+

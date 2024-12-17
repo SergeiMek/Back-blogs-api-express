@@ -1,6 +1,6 @@
 import {findPostData, postOutputType} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
-import {postsCollection} from "../db/dbInMongo";
+import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
 export const postsQueryRepository = {
@@ -11,8 +11,8 @@ export const postsQueryRepository = {
             filter.blogId = data.blogId
         }
 
-        const findPosts = await postsCollection.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).toArray()
-        const totalCount = await postsCollection.countDocuments(filter)
+        const findPosts = await postsMongooseModel.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).lean()
+        const totalCount = await postsMongooseModel.countDocuments(filter)
         const pageCount = Math.ceil(totalCount / data.pageSize)
 
         return {
@@ -26,7 +26,7 @@ export const postsQueryRepository = {
 
     },
         async findPostById(id: string): Promise<postType | null> {
-            const post =  await postsCollection.findOne({id: id})
+            const post =  await postsMongooseModel.findOne({id: id})
 
             if (post) {
                 return {

@@ -11,7 +11,7 @@ export const emailManager = {
     );
   },
 
- /* async sendChangePasswordEmail(email: string, recoveryCode: string) {
+  async sendChangePasswordEmail(email: string, recoveryCode: string) {
     const registrationSubject = "Password recovery";
     const registrationMessage = `<h1>Password recovery</h1><p>To finish password recovery please follow the link below:<a href="https://somesite.com/password-recovery?recoveryCode=${recoveryCode}">recovery password</a></p>`;
     await emailAdapter.sendEmail(
@@ -19,5 +19,5 @@ export const emailManager = {
       registrationSubject,
       registrationMessage
     );
-  },*/
+  },
 };

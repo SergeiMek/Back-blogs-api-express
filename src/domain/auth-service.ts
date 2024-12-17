@@ -16,7 +16,8 @@ enum ResultStatus {
     ErrorMessage = 3,
     NotUser = 4,
     CodeConfirmed = 5,
-    DateIsNotValid = 6
+    DateIsNotValid = 6,
+    ServerError = 7
 }
 
 type Result<T> = {
@@ -63,6 +64,10 @@ export const authService = {
                 confirmationCode: uuidv4(),
                 expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
                 isConfirmed: false
+            },
+            passwordRecovery: {
+                expirationDate: null,
+                recoveryCode: null
             }
         }
 
@@ -132,11 +137,75 @@ export const authService = {
             data: null
         }
 
-        const update =  await usersRepository.updateConfirmationStatus(user._id)
+        const update = await usersRepository.updateConfirmationStatus(user._id)
         return {
             status: ResultStatus.Success,
             data: null
         }
+    },
+    async sendPasswordRecoveryCode(email: string): Promise<Result<null>> {
+        const user = await usersRepository.findByLoginOrEmail(email)
+        if (!user) return {
+            status: ResultStatus.NotUser,
+            data: null
+        }
+        const userId = user._id
+        const recoveryCode = uuidv4()
+        const expirationDate = add(new Date(), {hours: 1})
+
+        try {
+            await emailManager.sendRegistrationEmail(
+                user.accountData.email,
+                recoveryCode
+            );
+        } catch (error) {
+            console.error(error);
+            return {
+                status: ResultStatus.ErrorMessage,
+                data: null
+            }
+        }
+        const result = await usersRepository.updatePasswordRecoveryData(userId, expirationDate, recoveryCode)
+
+        if (!result) {
+            return {
+                status: ResultStatus.ServerError,
+                data: null
+            }
+        }
+
+        return {
+            status: ResultStatus.Success,
+            data: null
+        }
+    },
+    async changePassword(recoveryCode: string, password: string): Promise<Result<null>> {
+        const user = await this.findUserByPasswordRecoveryCode(recoveryCode)
+        if (!user) return {
+            status: ResultStatus.NotUser,
+            data: null
+        }
+
+        const passwordSalt = await bcrypt.genSalt(10)
+        const passwordHash = await this._generateHash(password, passwordSalt)
+
+        const result = await usersRepository.updatePassword(user._id,passwordSalt,passwordHash)
+
+        if (!result) {
+            return {
+                status: ResultStatus.ServerError,
+                data: null
+            }
+        }
+
+        return {
+            status: ResultStatus.Success,
+            data: null
+        }
+    },
+    async findUserByPasswordRecoveryCode(recoveryCode: string): Promise<usersDBType | null> {
+        return await usersRepository.findUserByPasswordRecoveryCode(recoveryCode)
+
     },
     async _generateHash(password: string, salt: string) {
         return await bcrypt.hash(password, salt)

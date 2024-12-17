@@ -1,11 +1,11 @@
 import {Request, Response, Router} from "express";
 import {HTTP_STATUSES} from "../settings";
-import {authInputType, registrationDataType} from "../types/authType";
+import {authInputType, recoveryPasswordBodyType, registrationDataType} from "../types/authType";
 import {usersService} from "../domain/users-service";
 import {
     validationAuthInputPost,
     validationConfirmCode,
-    validationEmail
+    validationEmail, validationRecoveryPassword
 } from "../midlewares/validations/input/validation-auth-input";
 import {jwtService} from "../application/jwtService";
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
@@ -16,8 +16,8 @@ import {OutputErrorsType} from "../types/videosType";
 import {devicesService} from "../domain/devices-service";
 import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
-import {deviceCollection, usersCollection} from "../db/dbInMongo";
 import {rateLimiter} from "../midlewares/rate-limiter";
+import {devicesMongooseModel, usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
 export const authRouter = Router({})
@@ -36,7 +36,7 @@ authRouter.post('/login', rateLimiter, validationAuthInputPost, async (req: Requ
         await devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
         res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
-            res.status(200).json({accessToken: newAccessToken});
+        res.status(200).json({accessToken: newAccessToken});
 
     } else {
         res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
@@ -47,7 +47,7 @@ authRouter.post('/logout', validationRefreshToken, async (req: Request, res: Res
     const cookieRefreshToken = req.cookies.refreshToken
     const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
     if (cookieRefreshTokenObj) {
-       const cookieDeviceId = cookieRefreshTokenObj.deviceId
+        const cookieDeviceId = cookieRefreshTokenObj.deviceId
         await devicesService.deleteDevice(cookieDeviceId)
         res.clearCookie('refreshToken')
         res.sendStatus(204);
@@ -82,13 +82,13 @@ authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, async (re
         secure: true,
         httpOnly: true
     })
-    .status(HTTP_STATUSES.OK_200)
+        .status(HTTP_STATUSES.OK_200)
         .json({accessToken: newAccessToken})
 
 })
 
 
-authRouter.post('/registration-confirmation',rateLimiter, validationConfirmCode, async (req: Request<{}, {}, {
+authRouter.post('/registration-confirmation', rateLimiter, validationConfirmCode, async (req: Request<{}, {}, {
     code: string
 }>, res: Response) => {
     const errors: OutputErrorsType = {
@@ -124,10 +124,12 @@ authRouter.post('/registration-confirmation',rateLimiter, validationConfirmCode,
 
 authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (req: Request<{}, {}, registrationDataType>, res: Response) => {
     let {email, login, password} = req.body
+
     const errors: OutputErrorsType = {
         errorsMessages: []
     }
     const registrationResult = await authService.registerUser({email, login, password})
+
     if (registrationResult.status === 1) {
         errors.errorsMessages.push({
             message: 'Email already exists',
@@ -155,7 +157,37 @@ authRouter.post('/registration', rateLimiter, validationUsersInputPost, async (r
 
 })
 
-authRouter.post('/registration-email-resending',rateLimiter, validationEmail,  async (req: Request<{}, {}, {
+authRouter.post('/password-recovery', rateLimiter, validationEmail, async (req: Request<{}, {}, {
+    email: string
+}>, res: Response) => {
+    const email = req.body.email
+    const errors: OutputErrorsType = {
+        errorsMessages: []
+    }
+    const registrationResult = await authService.sendPasswordRecoveryCode(email)
+
+    if (registrationResult.status === 3) {
+        errors.errorsMessages.push({
+            message: 'error when sending email',
+            field: 'errorMessage'
+        })
+    }
+
+    if (errors.errorsMessages.length > 0) {
+        res.status(HTTP_STATUSES.BAD_REQUEST_400).send(errors)
+        return
+    }
+    if (registrationResult.status === 7) {
+        res.sendStatus(500)
+        return
+    }
+
+
+    res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+
+})
+
+authRouter.post('/registration-email-resending', rateLimiter, validationEmail, async (req: Request<{}, {}, {
     email: string
 }>, res: Response) => {
 
@@ -188,7 +220,6 @@ authRouter.post('/registration-email-resending',rateLimiter, validationEmail,  a
     res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
 })
 
-
 authRouter.get('/me', authMiddleware, async (req: Request, res: Response) => {
 
     const userData = await AuthQueryRepository.getUserData(req.user!._id)
@@ -200,21 +231,51 @@ authRouter.get('/me', authMiddleware, async (req: Request, res: Response) => {
 
 })
 
+authRouter.post('/new-password', rateLimiter, validationRecoveryPassword, async (req: Request<{}, {}, recoveryPasswordBodyType>, res: Response) => {
+
+    const {recoveryCode, newPassword} = req.body
+
+    const errors: OutputErrorsType = {
+        errorsMessages: []
+    }
+    const confirmCodeResult = await authService.changePassword(recoveryCode, newPassword)
+
+    if (confirmCodeResult.status === 4) {
+        errors.errorsMessages.push({
+            message: 'User by code not found',
+            field: 'code'
+        })
+        res.status(HTTP_STATUSES.BAD_REQUEST_400).send(errors)
+        return
+    }
+    if (confirmCodeResult.status === 7) {
+        errors.errorsMessages.push({
+            message: '',
+            field: 'server error'
+        })
+        res.status(500).send(errors)
+        return
+    }
+
+    res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+    return
+})
+
 
 authRouter.post('/get-users', async (req: Request<{}, {}, { num: string }>, res: Response) => {
     /* const users =  await usersCollection.find().toArray()
        res.status(200).send(users)*/
     if (req.body.num === "1") {
-        const users = await usersCollection.find().toArray()
+        const users = await usersMongooseModel.find().lean()
         res.status(200).send(users)
     }
 
     if (req.body.num === "2") {
-        await usersCollection.deleteMany()
+        await usersMongooseModel.deleteMany()
         res.sendStatus(200)
     }
     if (req.body.num === "3") {
-        const devise = await deviceCollection.find().toArray()
+        const devise = await devicesMongooseModel.find().lean()
         res.status(200).send(devise)
     }
     return

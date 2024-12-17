@@ -3,18 +3,16 @@ import {fromUTF8ToBase64} from "../../../src/midlewares/auth/auth-basic";
 import {ObjectId} from "mongodb";
 // @ts-ignore
 import bcrypt from "bcrypt";
-import {
-    blogsCollection,
-    commentsCollection,
-    deviceCollection,
-    postsCollection,
-    usersCollection
-} from "../../../src/db/dbInMongo";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
 // @ts-ignore
 import jwt from "jsonwebtoken"
 import {usersDBType} from "../../../src/db/dbType";
+import {
+    blogsMongooseModel, commentsMongooseModel, devicesMongooseModel,
+    postsMongooseModel,
+    usersMongooseModel
+} from "../../../src/db/mongooseSchema/mongooseSchema";
 
 
 export const createString = (length: number) => {
@@ -188,9 +186,9 @@ export async function createComment(data: dataCreateCommentData) {
         createdAt: new Date().toISOString()
     }))
     const user = await createOneUser(data.emailUser, data.loginUser, data.passwordUser)
-    await blogsCollection.insertOne(datasetBlog)
-    await postsCollection.insertMany(posts)
-    await usersCollection.insertOne(user)
+    await blogsMongooseModel.create(datasetBlog)
+    await postsMongooseModel.insertMany(posts)
+    await usersMongooseModel.create(user)
     const comment = {
         _id: new ObjectId,
         content: data.content,
@@ -201,7 +199,7 @@ export async function createComment(data: dataCreateCommentData) {
         createdAt: new Date().toISOString(),
         postId: posts[0].id
     }
-    await commentsCollection.insertOne(comment)
+    await commentsMongooseModel.create(comment)
     return {
         commentId: comment._id,
         userLogin: user.accountData.login,
@@ -238,7 +236,7 @@ export const loginUser = async (data: loginUsertype) => {
     }
 
 
-    await deviceCollection.insertOne(newDevice)
+    await devicesMongooseModel.create(newDevice)
 
     /*return {
         accessToken: newAccessToken,

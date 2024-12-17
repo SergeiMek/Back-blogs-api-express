@@ -1,13 +1,11 @@
-import {ObjectId} from "mongodb";
-import {deviceCollection, usersCollection} from "../db/dbInMongo";
-import {OutputAutData} from "../types/authType";
 import {OutputSessionsType} from "../types/securityType";
-import {blogsDBType, blogsType, deviceDBType} from "../db/dbType";
+import {deviceDBType} from "../db/dbType";
+import {devicesMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 export const securityQueryRepository = {
     async getAllSessionsForUser(userId: string) {
 
-        const devises = await deviceCollection.find({userId:userId}).toArray()
+        const devises = await devicesMongooseModel.find({userId:userId}).lean()
         if (!devises) return null
         //return devises
         return this._securityMapping(devises)

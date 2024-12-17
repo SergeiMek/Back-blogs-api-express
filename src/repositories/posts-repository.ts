@@ -1,29 +1,30 @@
-import {findPostData, postsInoutData} from "../types/postType";
-import {blogsRepository} from "./blogs-repository";
+import {postsInoutData} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
-import {postsCollection} from "../db/dbInMongo";
-import {DeleteResult, ObjectId, UpdateResult} from "mongodb";
+import {DeleteResult, UpdateResult} from "mongodb";
+import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
 export const postsRepository = {
 
     async createdPost(newPostCreatedData: postType): Promise<postType> {
 
-        const result = await postsCollection.insertOne(newPostCreatedData)
-        return newPostCreatedData
+        /* const result = await postsCollection.insertOne(newPostCreatedData)
+         return newPostCreatedData*/
 
+        const smartUserModel = new postsMongooseModel(newPostCreatedData);
+        await smartUserModel.save();
+        return newPostCreatedData
     },
     async findPostById(id: string): Promise<postDBType | null> {
-        return await postsCollection.findOne({id: id})
+        //return await postsCollection.findOne({id: id})
+        return  postsMongooseModel.findOne({id: id})
+
     },
     async updatePost(postId: string, updatePostData: postsInoutData): Promise<UpdateResult> {
-
-
-        return await postsCollection.updateOne({id: postId}, {$set: updatePostData})
-
+        return  postsMongooseModel.updateOne({id: postId}, {$set: updatePostData})
     },
     async deletePost(id: string): Promise<DeleteResult> {
-        return postsCollection.deleteOne({id: id})
+        return postsMongooseModel.deleteOne({id: id})
 
     }
 }

@@ -1,18 +1,8 @@
 import {SETTINGS} from "../settings";
 import {Db, MongoClient} from "mongodb";
-import {
-    blackListType,
-    blogsType,
-    commentsDBType,
-    deviceDBType,
-    postType, rateLimitType,
-    usersDBType,
-    videoType
-} from "./dbType";
-import {deleteDB} from "./db";
 
 
-export const dbMongo = {
+const dbMongo = {
     client: {} as MongoClient,
 
     getDbName(): Db {
@@ -45,7 +35,7 @@ export const dbMongo = {
                 const collectionName = collection.name;
                 await this.getDbName().collection(collectionName).deleteMany({});
             }
-            await deleteDB()
+            //await deleteDB()
         } catch (e: unknown) {
             console.error('Error in drop db:', e);
             await this.stop();
@@ -55,15 +45,8 @@ export const dbMongo = {
 }
 
 
-export const client = new MongoClient(SETTINGS.MONGO_URL)
+ const client = new MongoClient(SETTINGS.MONGO_URL)
 
 const db = client.db('blogsPlatform')
-export const videosCollection = db.collection<videoType>('videos')
-export const postsCollection = db.collection<postType>('posts')
-export const blogsCollection = db.collection<blogsType>('blogs')
-export const usersCollection = db.collection<usersDBType>('users')
-export const commentsCollection = db.collection<commentsDBType>('comments')
-export const deviceCollection = db.collection<deviceDBType>('device')
-export const limitCollection = db.collection<rateLimitType>('limit')
 
 
