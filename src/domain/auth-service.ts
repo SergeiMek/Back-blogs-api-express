@@ -154,16 +154,16 @@ export const authService = {
         const expirationDate = add(new Date(), {hours: 1})
 
         try {
-            await emailManager.sendChangePasswordEmail(
+             emailManager.sendChangePasswordEmail(
                 user.accountData.email,
                 recoveryCode
             );
         } catch (error) {
             console.error(error);
-            /*return {
+            return {
                 status: ResultStatus.ErrorMessage,
                 data: null
-            }*/
+            }
         }
         const result = await usersRepository.updatePasswordRecoveryData(userId, expirationDate, recoveryCode)
 

@@ -245,7 +245,7 @@ authRouter.post('/new-password', rateLimiter, validationRecoveryPassword, async 
             message: 'User by code not found',
             field: 'code'
         })
-        res.status(HTTP_STATUSES.BAD_REQUEST_400).send(errors)
+        res.status(HTTP_STATUSES.BAD_REQUEST_400).json(errors)
         return
     }
     if (confirmCodeResult.status === 7) {
