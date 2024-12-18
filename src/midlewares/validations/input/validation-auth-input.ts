@@ -62,14 +62,7 @@ const email = body("email").exists()
     .withMessage("Type of Email must be string")
     .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)
     .withMessage("Incorrect Email")
-    /*.custom(
-        async (email: string) => {
-            const user = await usersRepository.findByLoginOrEmail(email);
-            if (user) {
-                throw new Error("email already exist");
-            }
-            return true;
-        })*/
+
 
 
 export const validationAuthInputPost = [loginOrEmail, password, inputCheckErrorsMiddleware]

@@ -7,8 +7,6 @@ export const usersRepository = {
 
     async createdUser(newUserData: usersDBType): Promise<string> {
 
-        /*const newUser = await usersCollection.insertOne(newUserData)
-        return newUser.insertedId.toString()*/
         const newUser = await usersMongooseModel.create(newUserData)
         return newUser._id.toString()
 

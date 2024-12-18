@@ -154,7 +154,7 @@ export const authService = {
         const expirationDate = add(new Date(), {hours: 1})
 
         try {
-            await emailManager.sendRegistrationEmail(
+            await emailManager.sendChangePasswordEmail(
                 user.accountData.email,
                 recoveryCode
             );
