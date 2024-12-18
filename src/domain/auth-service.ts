@@ -159,7 +159,7 @@ export const authService = {
                 recoveryCode
             );
         } catch (error) {
-            console.error(error);
+           // console.error(error);
             return {
                 status: ResultStatus.ErrorMessage,
                 data: null

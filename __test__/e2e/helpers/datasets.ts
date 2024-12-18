@@ -120,6 +120,10 @@ export async function createOneUser(email: string, login: string, password: stri
             confirmationCode: uuidv4(),
             expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
             isConfirmed: false
+        },
+        passwordRecovery:{
+            recoveryCode:null,
+            expirationDate:null
         }
     }
 }

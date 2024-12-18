@@ -1,11 +1,11 @@
 import {req} from "./test-helpers";
 import {SETTINGS} from "../../src/settings";
 import {MongoMemoryServer} from "mongodb-memory-server";
-
 import {createOneUser, createOneUserRegistration} from "./helpers/datasets";
 import {emailAdapter} from "../../src/adapters/email-adapter";
 import mongoose from "mongoose";
 import {deleteDB, usersMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";
+
 
 
 
@@ -117,7 +117,6 @@ describe('/auth', () => {
             .expect(400)
 
 
-
         expect(res.body.errorsMessages[0].field).toEqual('email')
         expect(res.body.errorsMessages[0].message).toEqual(expect.any(String))
 
@@ -135,7 +134,6 @@ describe('/auth', () => {
             .post(SETTINGS.PATH.AUTH + '/registration')
             .send(userLoginData)
             .expect(400)
-
 
 
         expect(res.body.errorsMessages[0].field).toEqual('login')
@@ -157,7 +155,6 @@ describe('/auth', () => {
             .expect(400)
 
 
-
         expect(res.body.errorsMessages[0].field).toEqual('password')
         expect(res.body.errorsMessages[0].message).toEqual(expect.any(String))
 
@@ -169,17 +166,16 @@ describe('/auth', () => {
             password: '123456789',
             email: 'test@mail.ru',
             confirmationCode: 'code',
-            isConfirmed:false
+            isConfirmed: false
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
         await usersMongooseModel.create(createdUser)
 
 
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration-confirmation')
-            .send({code:'code'})
+            .send({code: 'code'})
             .expect(204)
 
 
@@ -191,17 +187,16 @@ describe('/auth', () => {
             password: '123456789',
             email: 'test@mail.ru',
             confirmationCode: 'code',
-            isConfirmed:true
+            isConfirmed: true
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
         await usersMongooseModel.create(createdUser)
 
 
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration-confirmation')
-            .send({code:'code'})
+            .send({code: 'code'})
             .expect(400)
 
         expect(res.body.errorsMessages[0].field).toEqual('code')
@@ -216,17 +211,16 @@ describe('/auth', () => {
             password: '123456789',
             email: 'test@mail.ru',
             confirmationCode: 'code',
-            isConfirmed:true
+            isConfirmed: true
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
         await usersMongooseModel.create(createdUser)
 
 
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration-confirmation')
-            .send({code:''})
+            .send({code: ''})
             .expect(400)
 
         expect(res.body.errorsMessages[0].field).toEqual('code')
@@ -241,17 +235,16 @@ describe('/auth', () => {
             password: '123456789',
             email: 'test@mail.ru',
             confirmationCode: 'code',
-            isConfirmed:false
+            isConfirmed: false
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
         await usersMongooseModel.create(createdUser)
 
 
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration-email-resending')
-            .send({email:'test@mail.ru'})
+            .send({email: 'test@mail.ru'})
             .expect(204)
 
         expect(emailAdapter.sendEmail).toBeCalled()
@@ -266,17 +259,16 @@ describe('/auth', () => {
             password: '123456789',
             email: 'test@mail.ru',
             confirmationCode: 'code',
-            isConfirmed:false
+            isConfirmed: false
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
         await usersMongooseModel.create(createdUser)
 
 
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration-email-resending')
-            .send({email:''})
+            .send({email: ''})
             .expect(400)
 
 
@@ -290,21 +282,150 @@ describe('/auth', () => {
             password: '123456789',
             email: 'test@mail.ru',
             confirmationCode: 'code',
-            isConfirmed:true
+            isConfirmed: true
         }
 
         const createdUser = await createOneUserRegistration(userLoginData)
         await usersMongooseModel.create(createdUser)
 
 
-
         const res = await req
             .post(SETTINGS.PATH.AUTH + '/registration-email-resending')
-            .send({email:'test@mail.ru'})
+            .send({email: 'test@mail.ru'})
             .expect(400)
 
 
         expect(res.body.errorsMessages[0].field).toEqual('email')
         expect(res.body.errorsMessages[0].message).toEqual(expect.any(String))
+    })
+    it('If the inputModel has invalid email (for example 222^gmail.com), 400', async () => {
+
+        const userLoginData = {
+            login: 'test',
+            password: '123456789',
+            email: 'test@mail.ru'
+        }
+
+        const createdUser = await createOneUser(userLoginData.email, userLoginData.login, userLoginData.password)
+        await usersMongooseModel.create(createdUser)
+
+        const res = await req
+            .post(SETTINGS.PATH.AUTH + '/password-recovery')
+            .send({email: 'test'})
+            .expect(400)
+
+    })
+    it('Password recovery OK, 204', async () => {
+
+        //emailManager.sendChangePasswordEmail= jest.fn().mockImplementation((email: string, subject: string, message: string) => Promise.resolve())
+
+        const userLoginData = {
+            login: 'test',
+            password: '123456789',
+            email: 'test15555@mail.ru'
+        }
+
+        const createdUser = await createOneUser(userLoginData.email, userLoginData.login, userLoginData.password)
+        await usersMongooseModel.create(createdUser)
+
+        const res = await req
+            .post(SETTINGS.PATH.AUTH + '/password-recovery')
+            .send({email: 'test15555@mail.ru'})
+            .expect(204)
+
+        const users = await usersMongooseModel.find({}).lean()
+
+        expect(users[0].passwordRecovery.recoveryCode).toEqual(expect.any(String))
+        expect(users[0].passwordRecovery.expirationDate).toEqual(expect.any(Date))
+
+    })
+    it('check for non-existent email, 204', async () => {
+
+        //emailManager.sendChangePasswordEmail= jest.fn().mockImplementation((email: string, subject: string, message: string) => Promise.resolve())
+
+        const userLoginData = {
+            login: 'test',
+            password: '123456789',
+            email: 'test15555@mail.ru'
+        }
+
+        const createdUser = await createOneUser(userLoginData.email, userLoginData.login, userLoginData.password)
+        await usersMongooseModel.create(createdUser)
+
+        const res = await req
+            .post(SETTINGS.PATH.AUTH + '/password-recovery')
+            .send({email: 'test@mail.ru'})
+            .expect(204)
+
+        const users = await usersMongooseModel.find({}).lean()
+
+        expect(users[0].passwordRecovery.recoveryCode).toEqual(null)
+        expect(users[0].passwordRecovery.expirationDate).toEqual(null)
+
+    })
+    it('new password OK, 204', async () => {
+
+        //emailManager.sendChangePasswordEmail= jest.fn().mockImplementation((email: string, subject: string, message: string) => Promise.resolve())
+
+        const userLoginData = {
+            login: 'test',
+            password: '123456789',
+            email: 'test@mail.ru'
+        }
+        const createdUser = await createOneUser(userLoginData.email, userLoginData.login, userLoginData.password)
+        await usersMongooseModel.create(createdUser)
+
+
+        const recoveryCode = '1234567890'
+
+        await usersMongooseModel.updateOne({_id:createdUser._id}, {$set: {'passwordRecovery.recoveryCode': recoveryCode}})
+
+
+        const res = await req
+            .post(SETTINGS.PATH.AUTH + '/new-password')
+            .send({
+                newPassword: '77777777',
+                recoveryCode: recoveryCode
+            })
+            .expect(204)
+
+        await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: 'test@mail.ru', password: '77777777'})
+            .expect(200);
+
+    })
+    it('incorrect password , 400', async () => {
+
+        const userLoginData = {
+            login: 'test',
+            password: '123456789',
+            email: 'test@mail.ru'
+        }
+        const createdUser = await createOneUser(userLoginData.email, userLoginData.login, userLoginData.password)
+        await usersMongooseModel.create(createdUser)
+
+
+        const recoveryCode = '1234567890'
+
+        await usersMongooseModel.updateOne({_id:createdUser._id}, {$set: {'passwordRecovery.recoveryCode': recoveryCode}})
+
+        const res = await req
+            .post(SETTINGS.PATH.AUTH + '/new-password')
+            .send({
+                newPassword: '7',
+                recoveryCode: recoveryCode
+            })
+            .expect(400)
+    })
+    it('incorrect recoveryCode , 400', async () => {
+
+        const res = await req
+            .post(SETTINGS.PATH.AUTH + '/new-password')
+            .send({
+                newPassword: '123456789',
+                recoveryCode: ''
+            })
+            .expect(400)
     })
 })
