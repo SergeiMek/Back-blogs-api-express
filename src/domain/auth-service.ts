@@ -160,10 +160,10 @@ export const authService = {
             );
         } catch (error) {
             console.error(error);
-            return {
+            /*return {
                 status: ResultStatus.ErrorMessage,
                 data: null
-            }
+            }*/
         }
         const result = await usersRepository.updatePasswordRecoveryData(userId, expirationDate, recoveryCode)
 
