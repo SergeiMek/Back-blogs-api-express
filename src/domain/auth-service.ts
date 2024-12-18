@@ -6,7 +6,7 @@ import {add} from "date-fns";
 import {emailManager} from "../adapters/email-manager";
 import {usersRepository} from "../repositories/users-repository";
 import {v4 as uuidv4} from 'uuid';
-import {usersService} from "./users-service";
+
 
 
 enum ResultStatus {
@@ -154,7 +154,7 @@ export const authService = {
         const expirationDate = add(new Date(), {hours: 1})
 
         try {
-             emailManager.sendChangePasswordEmail(
+            await emailManager.sendChangePasswordEmail(
                 user.accountData.email,
                 recoveryCode
             );
