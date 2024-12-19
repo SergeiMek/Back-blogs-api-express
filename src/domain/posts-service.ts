@@ -2,7 +2,7 @@ import {postsInoutData} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
 import {postsRepository} from "../repositories/posts-repository";
 import {blogsRepository} from "../repositories/blogs-repository";
-import {BlogsQueryRepository} from "../repositories/blog-query-repository";
+import {blogsQueryRepository} from "../repositories/blog-query-repository";
 
 
 export const postsService = {
@@ -11,7 +11,7 @@ export const postsService = {
 
         //let {title, shortDescription, content,blogId} = newPostCreatedData
 
-        const blog = await BlogsQueryRepository.findBlogById(newPostCreatedData.blogId)
+        const blog = await blogsQueryRepository.findBlogById(newPostCreatedData.blogId)
 
         const newPost = {
             id: String(+(new Date())),

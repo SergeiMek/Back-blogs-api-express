@@ -1,7 +1,6 @@
 import {req} from './test-helpers'
 import {HTTP_STATUSES, SETTINGS} from '../../src/settings'
 import {inputVideoType} from "../../src/types/videosType";
-import {dbMongo, videosCollection} from "../../src/db/dbInMongo";
 import {MongoMemoryServer} from "mongodb-memory-server";
 import mongoose from "mongoose";
 import {videosMongooseModel} from "../../src/db/mongooseSchema/mongooseSchema";

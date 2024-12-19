@@ -3,6 +3,9 @@ import {userInputType} from "../types/usersType";
 import bcrypt from "bcrypt"
 import {ObjectId} from "mongodb";
 import {usersRepository} from "../repositories/users-repository";
+import {AccountData, AuthDBTypeClass, EmailConfirmation, PasswordRecovery} from "../types/authType";
+import {v4 as uuidv4} from "uuid/dist/esm";
+import {add} from "date-fns";
 
 
 export const usersService = {
@@ -13,7 +16,7 @@ export const usersService = {
         const passwordHash = await this._generateHash(userCreatedData.password, passwordSalt)
 
 
-        const newUser: usersDBType = {
+        /*const newUser: usersDBType = {
             _id: new ObjectId(),
             accountData: {
                 createdAt: new Date().toISOString(),
@@ -31,7 +34,13 @@ export const usersService = {
                 expirationDate: null,
                 recoveryCode: null
             }
-        }
+        }*/
+
+        const newUser: usersDBType = new AuthDBTypeClass(new ObjectId(),
+            new AccountData(new Date().toISOString(), userCreatedData.login, userCreatedData.email, passwordHash, passwordSalt),
+            new EmailConfirmation(null, null, true),
+            new PasswordRecovery(null, null)
+        )
 
         return usersRepository.createdUser(newUser)
     },

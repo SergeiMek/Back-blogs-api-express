@@ -2,14 +2,16 @@ import {OutputSessionsType} from "../types/securityType";
 import {deviceDBType} from "../db/dbType";
 import {devicesMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
-export const securityQueryRepository = {
+
+
+class SecurityQueryRepository{
     async getAllSessionsForUser(userId: string) {
 
         const devises = await devicesMongooseModel.find({userId:userId}).lean()
         if (!devises) return null
         //return devises
         return this._securityMapping(devises)
-    },
+    }
     _securityMapping(array: deviceDBType[]): OutputSessionsType[] {
         return array.map((devise) => {
             return {
@@ -22,4 +24,4 @@ export const securityQueryRepository = {
     }
 }
 
-//// : Promise<Array<OutputSessionsType> | null>
+export const securityQueryRepository = new SecurityQueryRepository()

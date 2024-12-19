@@ -57,3 +57,23 @@ export type updateCommentType = {
     commentId: string
     content: string
 }
+
+export class CommentatorInfo {
+    constructor(
+        public userId: ObjectId,
+        public userLogin: string
+    ) {
+    }
+}
+
+
+export class CommentsBDTypeClass {
+    constructor(
+        public _id: ObjectId,
+        public content: string,
+        public createdAt: string,
+        public postId: string,
+        public commentatorInfo: CommentatorInfo
+    ) {
+    }
+}

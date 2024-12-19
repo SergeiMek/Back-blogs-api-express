@@ -2,8 +2,14 @@ import {postsInoutData} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
 import {postsRepository} from "../repositories/posts-repository";
 import {blogsRepository} from "../repositories/blogs-repository";
-import {BlogsQueryRepository} from "../repositories/blog-query-repository";
-import {createCommentType, outputCommentType, updateCommentType} from "../types/commentsType";
+import {blogsQueryRepository} from "../repositories/blog-query-repository";
+import {
+    CommentatorInfo,
+    CommentsBDTypeClass,
+    createCommentType,
+    outputCommentType,
+    updateCommentType
+} from "../types/commentsType";
 import {commentsRepository} from "../repositories/comments-repository";
 import {ObjectId} from "mongodb";
 import {usersRepository} from "../repositories/users-repository";
@@ -24,8 +30,8 @@ type Result<T> = {
     data: T
 }
 
-export const commentsService = {
 
+class CommentsService {
     async createdComment(commentData: createCommentType): Promise<Result<outputCommentType | null>> {
 
         const post = await postsRepository.findPostById(commentData.postId)
@@ -41,7 +47,7 @@ export const commentsService = {
         const user = await usersRepository.findUserById(commentData.userId)
 
 
-        const newComment = {
+        /*const newComment = {
             _id: new ObjectId(),
             content: commentData.content,
             commentatorInfo: {
@@ -50,8 +56,12 @@ export const commentsService = {
             },
             createdAt: new Date().toISOString(),
             postId: commentData.postId
-        }
+        }*/
 
+        const newComment = new CommentsBDTypeClass(new ObjectId(), commentData.content,
+            new Date().toISOString(), commentData.postId,
+            new CommentatorInfo(commentData.userId, user!.accountData.login)
+        )
 
         const commentId = await commentsRepository.createComments(newComment)
         const createdComment = await commentsRepository.findCommentById(commentId.toString())
@@ -75,7 +85,8 @@ export const commentsService = {
             }
         }
 
-    },
+    }
+
     async updateComment(updateData: updateCommentType): Promise<Result<boolean | null>> {
 
         const comment = await commentsRepository.findCommentById(updateData.commentId)
@@ -103,7 +114,8 @@ export const commentsService = {
             status: ResultStatus.ServerError,
             data: null
         }
-    },
+    }
+
     async deleteComment(id: string, userId: ObjectId): Promise<Result<boolean | null>> {
 
 
@@ -133,3 +145,5 @@ export const commentsService = {
         }
     }
 }
+
+export const commentsService = new CommentsService()

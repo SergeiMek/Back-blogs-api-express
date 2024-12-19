@@ -16,7 +16,7 @@ type Result<T> = {
 }
 
 
-export const commentsQueryRepository = {
+class CommentsQueryRepository {
     async getAllComments(data: findCommentsData): Promise<Result<CommentsOutputType | null>> {
 
         const post = await postsMongooseModel.findOne({id: data.postId})
@@ -50,7 +50,8 @@ export const commentsQueryRepository = {
         }
 
 
-    },
+    }
+
     async getCommentById(id: string): Promise<outputCommentType | null> {
         if (!this._checkObjectId(id)) return null;
         const comment = await commentsMongooseModel.findOne({_id: new ObjectId(id)}).lean()
@@ -68,7 +69,8 @@ export const commentsQueryRepository = {
             return null
         }
 
-    },
+    }
+
     _commentMapping(array: commentsDBType[]): outputCommentType[] {
         return array.map((comment) => {
             return {
@@ -81,9 +83,11 @@ export const commentsQueryRepository = {
                 createdAt: comment.createdAt
             };
         });
-    },
+    }
+
     _checkObjectId(id: string): boolean {
         return ObjectId.isValid(id)
     }
-
 }
+
+export const commentsQueryRepository = new CommentsQueryRepository()

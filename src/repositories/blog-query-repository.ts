@@ -2,7 +2,8 @@ import {blogsDBType, blogsType} from "../db/dbType";
 import {blogDataFindType, blogQueryOutputType} from "../types/blogType";
 import {blogsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
-export const BlogsQueryRepository = {
+
+class BlogQueryRepository {
     async getAllBlogs(queryData: blogDataFindType): Promise<blogQueryOutputType> {
 
         const filter: any = {}
@@ -23,7 +24,8 @@ export const BlogsQueryRepository = {
         }
 
 
-    },
+    }
+
     async findBlogById(id: string): Promise<blogsType | null> {
         const blog = await blogsMongooseModel.findOne({id: id})
         if (blog) {
@@ -38,7 +40,8 @@ export const BlogsQueryRepository = {
         } else {
             return null
         }
-    },
+    }
+
     _blogMapping(array: blogsDBType[]): blogsType[] {
         return array.map((blog) => {
             return {
@@ -51,5 +54,6 @@ export const BlogsQueryRepository = {
             };
         });
     }
-
 }
+
+export const blogsQueryRepository = new BlogQueryRepository()

@@ -5,7 +5,7 @@ import {
 
 } from "../_validation-error-check";
 
-import {BlogsQueryRepository} from "../../../repositories/blog-query-repository";
+import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
 
 const websiteUrlPattern =
     /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/;
@@ -57,7 +57,7 @@ export const validationBlogsInput = [
 
  export const validationBlogCreationCustom = param("blogId").isString().withMessage('not string')
     .trim().custom(async (value) => {
-        const blog = await BlogsQueryRepository.findBlogById(value);
+        const blog = await blogsQueryRepository.findBlogById(value);
         if (!blog) {
             throw new Error("Blog with provided ID not found");
         }

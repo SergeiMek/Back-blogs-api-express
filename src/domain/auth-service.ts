@@ -1,4 +1,10 @@
-import {registrationDataType} from "../types/authType";
+import {
+    AccountData,
+    AuthDBTypeClass,
+    EmailConfirmation,
+    PasswordRecovery,
+    registrationDataType
+} from "../types/authType";
 import bcrypt from "bcrypt";
 import {usersDBType} from "../db/dbType";
 import {ObjectId} from "mongodb";
@@ -6,7 +12,6 @@ import {add} from "date-fns";
 import {emailManager} from "../adapters/email-manager";
 import {usersRepository} from "../repositories/users-repository";
 import {v4 as uuidv4} from 'uuid';
-
 
 
 enum ResultStatus {
@@ -27,7 +32,7 @@ type Result<T> = {
 }
 
 
-export const authService = {
+class AuthService {
     async registerUser(registerData: registrationDataType): Promise<Result<null>> {
 
         const findUserByLogin = await usersRepository.findByLoginOrEmail(registerData.login)
@@ -51,25 +56,11 @@ export const authService = {
         const passwordHash = await this._generateHash(registerData.password, passwordSalt)
 
 
-        const newUser: usersDBType = {
-            _id: new ObjectId(),
-            accountData: {
-                createdAt: new Date().toISOString(),
-                login: registerData.login,
-                email: registerData.email,
-                passwordHash,
-                passwordSalt
-            },
-            emailConfirmation: {
-                confirmationCode: uuidv4(),
-                expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
-                isConfirmed: false
-            },
-            passwordRecovery: {
-                expirationDate: null,
-                recoveryCode: null
-            }
-        }
+        const newUser: usersDBType = new AuthDBTypeClass( new ObjectId(),
+            new AccountData(new Date().toISOString(),registerData.login,registerData.email,passwordHash,passwordSalt),
+            new EmailConfirmation(uuidv4(),add(new Date(), {hours: 1}),false),
+            new PasswordRecovery(null,null)
+            )
 
         const createResult = await usersRepository.createdUser(newUser)
 
@@ -92,7 +83,8 @@ export const authService = {
             data: null
         }
 
-    },
+    }
+
     async resendConfirmationCode(email: string): Promise<Result<null>> {
         const user = await usersRepository.findByLoginOrEmail(email)
         if (!user) return {
@@ -121,7 +113,8 @@ export const authService = {
             status: ResultStatus.Success,
             data: null
         }
-    },
+    }
+
     async confirmEmail(code: string): Promise<Result<null>> {
         const user = await usersRepository.findUserByConfirmCode(code)
         if (!user) return {
@@ -142,7 +135,8 @@ export const authService = {
             status: ResultStatus.Success,
             data: null
         }
-    },
+    }
+
     async sendPasswordRecoveryCode(email: string): Promise<Result<null>> {
         const user = await usersRepository.findByLoginOrEmail(email)
         if (!user) return {
@@ -159,7 +153,7 @@ export const authService = {
                 recoveryCode
             );
         } catch (error) {
-           // console.error(error);
+            // console.error(error);
             return {
                 status: ResultStatus.ErrorMessage,
                 data: null
@@ -178,7 +172,8 @@ export const authService = {
             status: ResultStatus.Success,
             data: null
         }
-    },
+    }
+
     async changePassword(recoveryCode: string, password: string): Promise<Result<null>> {
         const user = await this.findUserByPasswordRecoveryCode(recoveryCode)
         if (!user) return {
@@ -189,7 +184,7 @@ export const authService = {
         const passwordSalt = await bcrypt.genSalt(10)
         const passwordHash = await this._generateHash(password, passwordSalt)
 
-        const result = await usersRepository.updatePassword(user._id,passwordSalt,passwordHash)
+        const result = await usersRepository.updatePassword(user._id, passwordSalt, passwordHash)
 
         if (!result) {
             return {
@@ -202,12 +197,17 @@ export const authService = {
             status: ResultStatus.Success,
             data: null
         }
-    },
+    }
+
     async findUserByPasswordRecoveryCode(recoveryCode: string): Promise<usersDBType | null> {
         return await usersRepository.findUserByPasswordRecoveryCode(recoveryCode)
 
-    },
+    }
+
     async _generateHash(password: string, salt: string) {
         return await bcrypt.hash(password, salt)
     }
+
 }
+
+export const authService = new AuthService()

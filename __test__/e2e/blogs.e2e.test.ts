@@ -10,14 +10,6 @@ import {blogsMongooseModel, videosMongooseModel} from "../../src/db/mongooseSche
 
 describe('/blogs', () => {
 
-
-    /* beforeAll(async () => { // очистка базы данных перед началом тестирования
-
-         const server = await MongoMemoryServer.create()
-         const url = server.getUri()
-         await runDb(url)
-         await blogsCollection.deleteMany({})
-     })*/
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()
         //await dbMongo.run(mongoServer.getUri());

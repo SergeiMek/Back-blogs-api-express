@@ -1,6 +1,5 @@
-import {blogsType, videoType} from "../db/dbType";
-import {Request, Response} from "express";
-import {BodyType, OutputErrorsType, ParamType, QueryType} from "./videosType";
+import {blogsType} from "../db/dbType";
+import {OutputErrorsType} from "./videosType";
 
 export type blogInputPostDat = {
     name: string
@@ -16,7 +15,7 @@ export type blogInputData = {
 
 }
 
-export type blogInputPostData ={
+export type blogInputPostData = {
     title: string
     shortDescription: string
     content: string
@@ -46,13 +45,6 @@ export type blogQueryBlogType = {
     pageSize: string | null
 }
 
-/*export type blogQueryIdType = {
-    pageNumber: number | null
-    pageSize: number | null
-    sortBy: string | null
-    sortDirection: 'asc' | 'desc'
-}*/
-
 
 export type blogDataFindType = {
     searchNameTerm: string | null
@@ -68,3 +60,14 @@ export type OutputBlogsTypeArray = Array<blogsType>
 
 export type OutputBlogsType = OutputErrorsType | blogsType | OutputBlogsTypeArray | blogQueryOutputType
 
+
+export class BlogDBTypeClass {
+    constructor(public id: string,
+              public createdAt: string,
+              public isMembership: boolean,
+              public name: string,
+              public description: string,
+              public websiteUrl: string) {
+
+    }
+}

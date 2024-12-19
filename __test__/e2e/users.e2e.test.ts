@@ -14,9 +14,6 @@ describe('/users', () => {
     })
 
     beforeEach(async () => {
-        // await dbMongo.drop();
-       // await postsMongooseModel.deleteMany()
-       // await blogsMongooseModel.deleteMany()
         await usersMongooseModel.deleteMany()
     })
 

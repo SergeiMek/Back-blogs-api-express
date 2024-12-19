@@ -35,8 +35,7 @@ export const usersRepository = {
         if (!userInstance) return false
         await userInstance.deleteOne()
         return true
-        /*const isDel = await usersMongooseModel.deleteOne({_id: new ObjectId(id)})
-        return isDel.deletedCount === 1;*/
+
     },
     async updateConfirmationStatus(_id: ObjectId): Promise<boolean> {
         let result = await usersMongooseModel.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})

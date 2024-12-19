@@ -15,23 +15,6 @@ import {
 
 describe('/posts', () => {
 
-    /*beforeAll(async () => {
-        const mongoServer = await MongoMemoryServer.create()
-        await dbMongo.run(mongoServer.getUri());
-    })
-
-    beforeEach(async () => {
-        await dbMongo.drop();
-    })
-
-    afterAll(async () => {
-        await dbMongo.stop();
-
-    })
-
-    afterAll(done => {
-        done()
-    })*/
 
     beforeAll(async () => {
         const mongoServer = await MongoMemoryServer.create()

@@ -4,7 +4,7 @@ import {ObjectId} from "mongodb";
 import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-export const usersQueryRepository = {
+class UsersQueryRepository {
     async getAllUsers(data: usersQueryOutputType): Promise<usersOutputType> {
         let filter: any = {}
 
@@ -31,7 +31,8 @@ export const usersQueryRepository = {
             items: this._usersMapping(findUsers)
         }
 
-    },
+    }
+
     async findUserById(id: string): Promise<usersEntityType | null> {
         if (!this._checkObjectId(id)) return null;
 
@@ -46,7 +47,8 @@ export const usersQueryRepository = {
         } else {
             return null
         }
-    },
+    }
+
     _usersMapping(array: usersDBType[]): usersEntityType[] {
         return array.map((user) => {
             return {
@@ -56,9 +58,11 @@ export const usersQueryRepository = {
                 createdAt: user.accountData.createdAt
             };
         });
-    },
+    }
+
     _checkObjectId(id: string): boolean {
         return ObjectId.isValid(id)
     }
-
 }
+
+export const usersQueryRepository = new UsersQueryRepository()

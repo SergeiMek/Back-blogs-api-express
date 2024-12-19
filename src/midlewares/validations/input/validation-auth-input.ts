@@ -1,7 +1,7 @@
 import {body, param} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
 
-import {BlogsQueryRepository} from "../../../repositories/blog-query-repository";
+import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
 import {usersRepository} from "../../../repositories/users-repository";
 
 

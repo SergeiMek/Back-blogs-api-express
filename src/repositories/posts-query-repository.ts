@@ -3,7 +3,7 @@ import {postDBType, postType} from "../db/dbType";
 import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-export const postsQueryRepository = {
+class PostsQueryRepository {
     async getAllPosts(data: findPostData): Promise<postOutputType> {
         let filter: any = {}
 
@@ -24,24 +24,26 @@ export const postsQueryRepository = {
         }
 
 
-    },
-        async findPostById(id: string): Promise<postType | null> {
-            const post =  await postsMongooseModel.findOne({id: id})
+    }
 
-            if (post) {
-                return {
-                    id: post.id,
-                    title: post.title,
-                    shortDescription: post.shortDescription,
-                    content: post.content,
-                    blogId: post.blogId,
-                    blogName: post.blogName,
-                    createdAt: post.createdAt
-                }
-            } else {
-                return null
+    async findPostById(id: string): Promise<postType | null> {
+        const post = await postsMongooseModel.findOne({id: id})
+
+        if (post) {
+            return {
+                id: post.id,
+                title: post.title,
+                shortDescription: post.shortDescription,
+                content: post.content,
+                blogId: post.blogId,
+                blogName: post.blogName,
+                createdAt: post.createdAt
             }
-        },
+        } else {
+            return null
+        }
+    }
+
     _postMapping(array: postDBType[]): postType[] {
         return array.map((post) => {
             return {
@@ -55,5 +57,6 @@ export const postsQueryRepository = {
             };
         });
     }
-
 }
+
+export const postsQueryRepository = new PostsQueryRepository()

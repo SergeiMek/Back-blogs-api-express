@@ -17,107 +17,109 @@ import {commentsQueryRepository} from "../repositories/comments-query-repository
 export const postsRouter = Router({})
 
 
-postsRouter.get('/', async (req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) => {
-    const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
+class PostsController {
+    async getAllPosts(req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) {
+        const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
 
-    res.status(HTTP_STATUSES.OK_200).json(await postsQueryRepository.getAllPosts({
-        sortBy,
-        sortDirection,
-        pageNumber,
-        pageSize
-    }))
-})
-
-postsRouter.get('/:id', async (req: Request<{ id: string }>, res: Response<OutputPostsType>) => {
-
-    const post = await postsQueryRepository.findPostById(req.params.id)
-
-    if (post) {
-        res.status(HTTP_STATUSES.OK_200).json(post)
-    } else {
-        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
-    }
-})
-
-postsRouter.post('/', authBasic, validationPosts, async (req: Request<{}, {}, postsInoutData>, res: Response<OutputPostsType>) => {
-
-
-    const createdPost = await postsService.createdPost(req.body)
-
-    res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
-
-})
-
-postsRouter.get('/:postId/comments', async (req: Request<{
-    postId: string
-}, {}, {}, commentsQueryType>, res: Response<CommentsOutputType | null>) => {
-    const postId = req.params.postId
-    const {pageNumber, pageSize, sortBy, sortDirection} = paginationQueries(req)
-    //res.status(HTTP_STATUSES.CREATED_201).json(createdComment)
-    const findComments = await commentsQueryRepository.getAllComments({
-        pageNumber,
-        pageSize,
-        sortBy,
-        sortDirection,
-        postId
-    })
-    if (findComments.status === 1) {
-        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
-    }
-    if (findComments.status === 0) {
-        res.status(HTTP_STATUSES.OK_200).send(findComments.data)
-    }
-})
-
-postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, async (req: Request<{
-    postId: string
-}, {}, { content: string }>, res: Response) => {
-    const commentData = {
-        userId: req.user!._id,
-        content: req.body.content,
-        postId: req.params.postId
-    }
-    const createdComment = await commentsService.createdComment(commentData)
-
-    if (createdComment.status === 2) {
-        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
-    }
-    if (createdComment.status === 0) {
-        res.status(HTTP_STATUSES.CREATED_201).send(createdComment.data)
+        res.status(HTTP_STATUSES.OK_200).json(await postsQueryRepository.getAllPosts({
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }))
     }
 
-})
+    async findPostById(req: Request<{ id: string }>, res: Response<OutputPostsType>) {
 
-postsRouter.put('/:id', authBasic, validationPosts, async (req: Request<{
-    id: string
-}, {}, postsInoutData>, res: Response<OutputPostsType>) => {
-    /*const updatePostData = {
-        title: req.body.title,
-        shortDescription: req.body.shortDescription,
-        content: req.body.content,
-        blogId: req.body.blogId
-    }*/
-    const updatedPost = await postsService.updatePost(req.params.id, req.body)
+        const post = await postsQueryRepository.findPostById(req.params.id)
 
-    if (updatedPost) {
-        res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
-    } else {
-        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        if (post) {
+            res.status(HTTP_STATUSES.OK_200).json(post)
+        } else {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
     }
 
-})
+    async createdPost(req: Request<{}, {}, postsInoutData>, res: Response<OutputPostsType>) {
 
-postsRouter.delete('/:id', authBasic, async (req: Request<{ id: string }>, res: Response<OutputPostsType>) => {
 
-    const isDeleted = await postsService.deletePost(req.params.id)
+        const createdPost = await postsService.createdPost(req.body)
 
-    if (isDeleted) {
-        res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
-    } else {
-        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
     }
-})
+
+    async getCommentsForPost(req: Request<{
+        postId: string
+    }, {}, {}, commentsQueryType>, res: Response<CommentsOutputType | null>) {
+        const postId = req.params.postId
+        const {pageNumber, pageSize, sortBy, sortDirection} = paginationQueries(req)
+        const findComments = await commentsQueryRepository.getAllComments({
+            pageNumber,
+            pageSize,
+            sortBy,
+            sortDirection,
+            postId
+        })
+        if (findComments.status === 1) {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
+        if (findComments.status === 0) {
+            res.status(HTTP_STATUSES.OK_200).send(findComments.data)
+        }
+    }
+
+    async createCommentForPost(req: Request<{
+        postId: string
+    }, {}, { content: string }>, res: Response) {
+        const commentData = {
+            userId: req.user!._id,
+            content: req.body.content,
+            postId: req.params.postId
+        }
+        const createdComment = await commentsService.createdComment(commentData)
+
+        if (createdComment.status === 2) {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
+        if (createdComment.status === 0) {
+            res.status(HTTP_STATUSES.CREATED_201).send(createdComment.data)
+        }
+    }
+
+    async updatePost(req: Request<{
+        id: string
+    }, {}, postsInoutData>, res: Response<OutputPostsType>) {
+        const updatedPost = await postsService.updatePost(req.params.id, req.body)
+
+        if (updatedPost) {
+            res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+        } else {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
+    }
+
+    async deletePost(req: Request<{ id: string }>, res: Response<OutputPostsType>) {
+
+        const isDeleted = await postsService.deletePost(req.params.id)
+
+        if (isDeleted) {
+            res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+        } else {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
+    }
+}
+
+const postsControllerInstance = new PostsController()
+
+postsRouter.get('/', postsControllerInstance.getAllPosts)
+postsRouter.get('/:id', postsControllerInstance.findPostById)
+postsRouter.post('/', authBasic, validationPosts, postsControllerInstance.createdPost)
+postsRouter.get('/:postId/comments', postsControllerInstance.getCommentsForPost)
+postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, postsControllerInstance.createCommentForPost)
+postsRouter.put('/:id', authBasic, validationPosts, postsControllerInstance.updatePost)
+postsRouter.delete('/:id', authBasic, postsControllerInstance.deletePost)
 
 
 

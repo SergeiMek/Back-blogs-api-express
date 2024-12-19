@@ -1,11 +1,11 @@
 import {body} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
-import {BlogsQueryRepository} from "../../../repositories/blog-query-repository";
+import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
 
 
 export const validationPostsCreationCustom = body("blogId").isString().withMessage('not string')
     .trim().custom(async (value) => {
-        const blog = await BlogsQueryRepository.findBlogById(value);
+        const blog = await blogsQueryRepository.findBlogById(value);
         if (!blog) {
             throw new Error("Blog with provided ID not found");
         }

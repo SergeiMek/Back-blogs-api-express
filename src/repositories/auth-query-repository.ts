@@ -2,8 +2,9 @@ import {ObjectId} from "mongodb";
 import {OutputAutData} from "../types/authType";
 import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
-export const AuthQueryRepository = {
-    async getUserData(userId: ObjectId):Promise<OutputAutData | null> {
+
+class AuthQueryRepository {
+    async getUserData(userId: ObjectId): Promise<OutputAutData | null> {
         const user = await usersMongooseModel.findOne({_id: new ObjectId(userId)})
         if (!user) return null
         return {
@@ -11,5 +12,7 @@ export const AuthQueryRepository = {
             login: user.accountData.login,
             userId: user._id
         }
-    },
+    }
 }
+
+export const authQueryRepository = new AuthQueryRepository()

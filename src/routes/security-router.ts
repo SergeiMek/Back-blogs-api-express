@@ -10,56 +10,65 @@ import {securityQueryRepository} from "../repositories/security-query-repository
 export const securityRouter = Router({})
 
 
-securityRouter.get('/devices', validationRefreshToken, async (req: Request<{}, {}, authInputType>, res: Response) => {
+class SecurityController {
+    async getAllSessionsForUser(req: Request<{}, {}, authInputType>, res: Response) {
 
-    const cookieRefreshToken = req.cookies.refreshToken
-    const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
-    if (!cookieRefreshTokeObj) {
-        res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+        const cookieRefreshToken = req.cookies.refreshToken
+        const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
+        if (!cookieRefreshTokeObj) {
+            res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+            return
+        }
+
+        const findDevises = await securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)
+        res.status(200).send(findDevises)
         return
     }
 
-    const findDevises = await securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)
-    res.status(200).send(findDevises)
-    return
-})
+    async deleteDeviceById(req: Request<{
+        deviceId: string
+    }>, res: Response) {
+        const cookieRefreshToken = req.cookies.refreshToken
 
-securityRouter.delete('/devices/:deviceId', validationRefreshToken, async (req: Request<{
-    deviceId: string
-}>, res: Response) => {
-    const cookieRefreshToken = req.cookies.refreshToken
+        const isDeletedStatus = await devicesService.deleteDeviceById(req.params.deviceId, cookieRefreshToken)
 
-    const isDeletedStatus = await devicesService.deleteDeviceById(req.params.deviceId, cookieRefreshToken)
+        if (isDeletedStatus.status === 2) {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+            return
+        }
+        if (isDeletedStatus.status === 4) {
+            res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+            return
+        }
+        if (isDeletedStatus.status === 1) {
+            res.sendStatus(HTTP_STATUSES.FORBIDDEN_403)
+            return
+        }
+        if (isDeletedStatus.status === 0) {
+            res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+            return
+        }
+        res.sendStatus(500)
+    }
 
-    if (isDeletedStatus.status === 2) {
-        res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+    async deleteAllOldDevices(req: Request, res: Response) {
+        const cookieRefreshToken = req.cookies.refreshToken
+        const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
+        if (!cookieRefreshTokeObj) {
+            res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
+            return
+        }
+        await devicesService.deleteAllOldDevices(cookieRefreshTokeObj.deviceId)
+        res.sendStatus(204)
         return
     }
-    if (isDeletedStatus.status === 4) {
-        res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
-        return
-    }
-    if (isDeletedStatus.status === 1) {
-        res.sendStatus(HTTP_STATUSES.FORBIDDEN_403)
-        return
-    }
-    if (isDeletedStatus.status === 0) {
-        res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
-        return
-    }
-    res.sendStatus(500)
-})
-securityRouter.delete('/devices', validationRefreshToken, async (req: Request, res: Response) => {
-    const cookieRefreshToken = req.cookies.refreshToken
-    const cookieRefreshTokeObj = await jwtService.verifyToken(cookieRefreshToken)
-    if (!cookieRefreshTokeObj) {
-        res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
-        return
-    }
-    await devicesService.deleteAllOldDevices(cookieRefreshTokeObj.deviceId)
-    res.sendStatus(204)
-    return
-})
+}
+
+const securityControllerInstance = new SecurityController()
+
+securityRouter.get('/devices', validationRefreshToken, securityControllerInstance.getAllSessionsForUser)
+securityRouter.delete('/devices/:deviceId', validationRefreshToken, securityControllerInstance.deleteDeviceById)
+securityRouter.delete('/devices', validationRefreshToken, securityControllerInstance.deleteAllOldDevices)
 
 
 
