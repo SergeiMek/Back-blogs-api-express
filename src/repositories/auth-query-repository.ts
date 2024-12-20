@@ -3,7 +3,7 @@ import {OutputAutData} from "../types/authType";
 import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class AuthQueryRepository {
+export class AuthQueryRepository {
     async getUserData(userId: ObjectId): Promise<OutputAutData | null> {
         const user = await usersMongooseModel.findOne({_id: new ObjectId(userId)})
         if (!user) return null
@@ -15,4 +15,3 @@ class AuthQueryRepository {
     }
 }
 
-export const authQueryRepository = new AuthQueryRepository()

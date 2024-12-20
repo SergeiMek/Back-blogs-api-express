@@ -3,26 +3,38 @@ import {HTTP_STATUSES} from "../settings";
 import {authBasic} from "../midlewares/auth/auth-basic";
 import {OutputPostsType, postsInoutData} from "../types/postType";
 import {validationPosts} from "../midlewares/validations/input/validation-posts-input";
-import {postsService} from "../domain/posts-service";
-import {postsQueryRepository} from "../repositories/posts-query-repository";
 import {paginationQueries} from "../helpers/paginations_values";
 import {blogQueryBlogType} from "../types/blogType";
 import {validationCommentsInputPost} from "../midlewares/validations/input/validation-comments-input";
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
-import {commentsService} from "../domain/comments-service";
 import {CommentsOutputType, commentsQueryType} from "../types/commentsType";
-import {commentsQueryRepository} from "../repositories/comments-query-repository";
+import {PostsService} from "../domain/posts-service";
+import {PostsQueryRepository} from "../repositories/posts-query-repository";
+import {CommentsQueryRepository} from "../repositories/comments-query-repository";
+import {CommentsService} from "../domain/comments-service";
 
 
 export const postsRouter = Router({})
 
 
 class PostsController {
+    postsService: PostsService
+    postsQueryRepository: PostsQueryRepository
+    commentsQueryRepository: CommentsQueryRepository
+    commentsService: CommentsService
+
+    constructor() {
+        this.postsService = new PostsService()
+        this.commentsQueryRepository = new CommentsQueryRepository()
+        this.postsQueryRepository = new PostsQueryRepository()
+        this.commentsService = new CommentsService()
+    }
+
     async getAllPosts(req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) {
         const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
 
-        res.status(HTTP_STATUSES.OK_200).json(await postsQueryRepository.getAllPosts({
+        res.status(HTTP_STATUSES.OK_200).json(await this.postsQueryRepository.getAllPosts({
             sortBy,
             sortDirection,
             pageNumber,
@@ -32,7 +44,7 @@ class PostsController {
 
     async findPostById(req: Request<{ id: string }>, res: Response<OutputPostsType>) {
 
-        const post = await postsQueryRepository.findPostById(req.params.id)
+        const post = await this.postsQueryRepository.findPostById(req.params.id)
 
         if (post) {
             res.status(HTTP_STATUSES.OK_200).json(post)
@@ -44,7 +56,7 @@ class PostsController {
     async createdPost(req: Request<{}, {}, postsInoutData>, res: Response<OutputPostsType>) {
 
 
-        const createdPost = await postsService.createdPost(req.body)
+        const createdPost = await this.postsService.createdPost(req.body)
 
         res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
     }
@@ -54,7 +66,7 @@ class PostsController {
     }, {}, {}, commentsQueryType>, res: Response<CommentsOutputType | null>) {
         const postId = req.params.postId
         const {pageNumber, pageSize, sortBy, sortDirection} = paginationQueries(req)
-        const findComments = await commentsQueryRepository.getAllComments({
+        const findComments = await this.commentsQueryRepository.getAllComments({
             pageNumber,
             pageSize,
             sortBy,
@@ -77,7 +89,7 @@ class PostsController {
             content: req.body.content,
             postId: req.params.postId
         }
-        const createdComment = await commentsService.createdComment(commentData)
+        const createdComment = await this.commentsService.createdComment(commentData)
 
         if (createdComment.status === 2) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
@@ -90,7 +102,7 @@ class PostsController {
     async updatePost(req: Request<{
         id: string
     }, {}, postsInoutData>, res: Response<OutputPostsType>) {
-        const updatedPost = await postsService.updatePost(req.params.id, req.body)
+        const updatedPost = await this.postsService.updatePost(req.params.id, req.body)
 
         if (updatedPost) {
             res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
@@ -101,7 +113,7 @@ class PostsController {
 
     async deletePost(req: Request<{ id: string }>, res: Response<OutputPostsType>) {
 
-        const isDeleted = await postsService.deletePost(req.params.id)
+        const isDeleted = await this.postsService.deletePost(req.params.id)
 
         if (isDeleted) {
             res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
@@ -113,13 +125,13 @@ class PostsController {
 
 const postsControllerInstance = new PostsController()
 
-postsRouter.get('/', postsControllerInstance.getAllPosts)
-postsRouter.get('/:id', postsControllerInstance.findPostById)
-postsRouter.post('/', authBasic, validationPosts, postsControllerInstance.createdPost)
-postsRouter.get('/:postId/comments', postsControllerInstance.getCommentsForPost)
-postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, postsControllerInstance.createCommentForPost)
-postsRouter.put('/:id', authBasic, validationPosts, postsControllerInstance.updatePost)
-postsRouter.delete('/:id', authBasic, postsControllerInstance.deletePost)
+postsRouter.get('/', postsControllerInstance.getAllPosts.bind(postsControllerInstance))
+postsRouter.get('/:id', postsControllerInstance.findPostById.bind(postsControllerInstance))
+postsRouter.post('/', authBasic, validationPosts, postsControllerInstance.createdPost.bind(postsControllerInstance))
+postsRouter.get('/:postId/comments', postsControllerInstance.getCommentsForPost.bind(postsControllerInstance))
+postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, postsControllerInstance.createCommentForPost.bind(postsControllerInstance))
+postsRouter.put('/:id', authBasic, validationPosts, postsControllerInstance.updatePost.bind(postsControllerInstance))
+postsRouter.delete('/:id', authBasic, postsControllerInstance.deletePost.bind(postsControllerInstance))
 
 
 

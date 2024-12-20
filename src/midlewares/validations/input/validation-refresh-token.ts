@@ -1,7 +1,9 @@
 import {NextFunction, Request, Response} from "express";
 import {jwtService} from "../../../application/jwtService";
-import {devicesService} from "../../../domain/devices-service";
+import {DevicesService} from "../../../domain/devices-service";
 
+
+const devicesService = new DevicesService()
 
 export const validationRefreshToken = async (req: Request, res: Response, next: NextFunction) => {
     const cookieRefreshToken = req.cookies.refreshToken
@@ -48,7 +50,7 @@ export const validationRefreshToken = async (req: Request, res: Response, next: 
         res.sendStatus(401);
         return;
     }
-    if(cookieRefreshTokenIat !== findDevise.lastActiveDate){
+    if (cookieRefreshTokenIat !== findDevise.lastActiveDate) {
         res.sendStatus(401)
         return
     }

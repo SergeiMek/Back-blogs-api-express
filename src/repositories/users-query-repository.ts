@@ -4,7 +4,7 @@ import {ObjectId} from "mongodb";
 import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class UsersQueryRepository {
+export class UsersQueryRepository {
     async getAllUsers(data: usersQueryOutputType): Promise<usersOutputType> {
         let filter: any = {}
 
@@ -65,4 +65,3 @@ class UsersQueryRepository {
     }
 }
 
-export const usersQueryRepository = new UsersQueryRepository()

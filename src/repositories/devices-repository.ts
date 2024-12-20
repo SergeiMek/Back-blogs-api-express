@@ -3,7 +3,7 @@ import {ObjectId} from "mongodb";
 import {devicesMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class DevicesRepository {
+export class DevicesRepository {
     async createDevice(deviceDara: deviceDBType): Promise<ObjectId> {
         const result = await devicesMongooseModel.create(deviceDara)
         return result._id
@@ -38,4 +38,3 @@ class DevicesRepository {
     }
 }
 
-export const devicesRepository = new DevicesRepository()

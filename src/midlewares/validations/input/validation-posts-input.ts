@@ -1,7 +1,9 @@
 import {body} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
-import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
+import {BlogQueryRepository} from "../../../repositories/blog-query-repository";
 
+
+const blogsQueryRepository = new BlogQueryRepository()
 
 export const validationPostsCreationCustom = body("blogId").isString().withMessage('not string')
     .trim().custom(async (value) => {

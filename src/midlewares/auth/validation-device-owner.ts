@@ -1,9 +1,10 @@
 import {NextFunction, Request, Response} from "express";
 import {HTTP_STATUSES} from "../../settings";
 import {jwtService} from "../../application/jwtService";
-import {devicesService} from "../../domain/devices-service";
+import {DevicesService} from "../../domain/devices-service";
 
 
+const devicesService = new DevicesService()
 export const validationDeviceOwner = async (req: Request, res: Response, next: NextFunction) => {
 
     const cookieRefreshToken = req.cookies.refreshToken;
@@ -21,7 +22,7 @@ export const validationDeviceOwner = async (req: Request, res: Response, next: N
     }
     const deviceId = req.params.deviceId;
     const device = await devicesService.findDeviceByDeviceId(deviceId);
-    if(!device){
+    if (!device) {
         res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
         return
     }

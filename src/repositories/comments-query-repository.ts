@@ -16,7 +16,7 @@ type Result<T> = {
 }
 
 
-class CommentsQueryRepository {
+export class CommentsQueryRepository {
     async getAllComments(data: findCommentsData): Promise<Result<CommentsOutputType | null>> {
 
         const post = await postsMongooseModel.findOne({id: data.postId})
@@ -90,4 +90,3 @@ class CommentsQueryRepository {
     }
 }
 
-export const commentsQueryRepository = new CommentsQueryRepository()

@@ -1,27 +1,39 @@
 import {Request, Response, Router} from "express";
 import {blogInputData, blogInputPostData, blogQueryBlogType, OutputBlogsType} from "../types/blogType";
-import {blogsService} from "../domain/blogs-service";
 import {HTTP_STATUSES} from "../settings";
 import {authBasic} from "../midlewares/auth/auth-basic";
 import {validationBlogsInput} from "../midlewares/validations/input/validation-blogs-input";
-import {blogsQueryRepository} from "../repositories/blog-query-repository";
 import {paginationQueries} from "../helpers/paginations_values";
-import {postsQueryRepository} from "../repositories/posts-query-repository";
 import {OutputPostsType} from "../types/postType";
-import {postsService} from "../domain/posts-service";
 import {validationBlogInPost} from "../midlewares/validations/input/validationBlogCreatePost";
+import {PostsService} from "../domain/posts-service";
+import {PostsQueryRepository} from "../repositories/posts-query-repository";
+import {BlogsService} from "../domain/blogs-service";
+import {BlogQueryRepository} from "../repositories/blog-query-repository";
 
 
 export const blogsRouter = Router({})
 
 
 class BlogsController {
+     blogsQueryRepository: BlogQueryRepository
+    private postsService: PostsService
+    private postsQueryRepository: PostsQueryRepository
+    private blogsService: BlogsService
+
+    constructor() {
+        this.blogsQueryRepository = new BlogQueryRepository()
+        this.postsService = new PostsService()
+        this.postsQueryRepository = new PostsQueryRepository()
+        this.blogsService = new BlogsService()
+    }
+
     async getAllBlogs(req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputBlogsType>) {
 
         const {searchNameTerm, sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
 
-        res.status(200).json(await blogsQueryRepository.getAllBlogs({
+        res.status(200).json(await this.blogsQueryRepository.getAllBlogs({
             searchNameTerm,
             sortBy,
             sortDirection,
@@ -37,7 +49,7 @@ class BlogsController {
         const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
         const blogId = req.params.blogId
 
-        res.status(200).json(await postsQueryRepository.getAllPosts({
+        res.status(200).json(await this.postsQueryRepository.getAllPosts({
             sortBy,
             sortDirection,
             pageNumber,
@@ -47,7 +59,7 @@ class BlogsController {
     }
 
     async findBlogById(req: Request<{ id: string }>, res: Response<OutputBlogsType>) {
-        const blog = await blogsQueryRepository.findBlogById(req.params.id)
+        const blog = await this.blogsQueryRepository.findBlogById(req.params.id)
         if (blog) {
             res.status(HTTP_STATUSES.OK_200).json(blog)
         } else {
@@ -56,7 +68,7 @@ class BlogsController {
     }
 
     async createBlog(req: Request<{}, {}, blogInputData>, res: Response<OutputBlogsType>) {
-        const createdBlog = await blogsService.createdBlog(req.body)
+        const createdBlog = await this.blogsService.createdBlog(req.body)
         res.status(HTTP_STATUSES.CREATED_201).json(createdBlog)
     }
 
@@ -64,7 +76,7 @@ class BlogsController {
         blogId: string
     }, {}, blogInputPostData>, res: Response<OutputPostsType>) {
 
-        const createdPost = await postsService.createdPost({...req.body, blogId: req.params.blogId})
+        const createdPost = await this.postsService.createdPost({...req.body, blogId: req.params.blogId})
 
         res.status(HTTP_STATUSES.CREATED_201).json(createdPost)
     }
@@ -73,7 +85,7 @@ class BlogsController {
         id: string
     }, {}, blogInputData>, res: Response<OutputBlogsType>) {
 
-        const updatedBlog = await blogsService.updateBlog(req.params.id, req.body)
+        const updatedBlog = await this.blogsService.updateBlog(req.params.id, req.body)
 
         if (updatedBlog) {
             res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
@@ -81,28 +93,30 @@ class BlogsController {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
         }
     }
+
     async deleteBlog(req: Request<{ id: string }>, res: Response<OutputBlogsType>) {
 
-    const isDeleted = await blogsService.deleteBlog(req.params.id)
+        const isDeleted = await this.blogsService.deleteBlog(req.params.id)
 
-    if (isDeleted) {
-        res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
-    } else {
-    res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)}}
+        if (isDeleted) {
+            res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+        } else {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
+    }
 }
 
 
 const blogsControllerInstance = new BlogsController()
 
 
-
-blogsRouter.get('/', blogsControllerInstance.getAllBlogs)
-blogsRouter.get('/:blogId/posts',blogsControllerInstance.getPostsToTheBlog)
-blogsRouter.get('/:id',blogsControllerInstance.findBlogById)
-blogsRouter.post('/', authBasic, validationBlogsInput,blogsControllerInstance.createBlog)
-blogsRouter.post('/:blogId/posts', authBasic, validationBlogInPost, blogsControllerInstance.createdPostForBlog)
-blogsRouter.put('/:id', authBasic, validationBlogsInput,blogsControllerInstance.updateBlog)
-blogsRouter.delete('/:id', authBasic,blogsControllerInstance.deleteBlog)
+blogsRouter.get('/', blogsControllerInstance.getAllBlogs.bind(blogsControllerInstance))
+blogsRouter.get('/:blogId/posts', blogsControllerInstance.getPostsToTheBlog.bind(blogsControllerInstance))
+blogsRouter.get('/:id', blogsControllerInstance.findBlogById.bind(blogsControllerInstance))
+blogsRouter.post('/', authBasic, validationBlogsInput, blogsControllerInstance.createBlog.bind(blogsControllerInstance))
+blogsRouter.post('/:blogId/posts', authBasic, validationBlogInPost, blogsControllerInstance.createdPostForBlog.bind(blogsControllerInstance))
+blogsRouter.put('/:id', authBasic, validationBlogsInput, blogsControllerInstance.updateBlog.bind(blogsControllerInstance))
+blogsRouter.delete('/:id', authBasic, blogsControllerInstance.deleteBlog.bind(blogsControllerInstance))
 
 
 

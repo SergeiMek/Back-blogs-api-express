@@ -1,9 +1,9 @@
 import {body, param} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
+import {UsersRepository} from "../../../repositories/users-repository";
 
-import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
-import {usersRepository} from "../../../repositories/users-repository";
 
+const usersRepository = new UsersRepository()
 
 const loginValidation = body("login")
     .exists()
@@ -29,8 +29,8 @@ const password = body("password").exists()
     .withMessage("Type of Password must be string")
     .trim()
     .isLength({
-        min:6,
-        max:20
+        min: 6,
+        max: 20
     })
     .withMessage("Password length must be more than 6 and less than or equal to 20 symbols")
 
@@ -50,6 +50,5 @@ const email = body("email").exists()
         })
 
 
-
-export const validationUsersInputPost = [loginValidation,password,email, inputCheckErrorsMiddleware]
+export const validationUsersInputPost = [loginValidation, password, email, inputCheckErrorsMiddleware]
 

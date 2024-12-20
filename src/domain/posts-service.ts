@@ -1,17 +1,22 @@
 import {postsInoutData} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
-import {postsRepository} from "../repositories/posts-repository";
-import {blogsRepository} from "../repositories/blogs-repository";
-import {blogsQueryRepository} from "../repositories/blog-query-repository";
+import {PostsRepository} from "../repositories/posts-repository";
+import {BlogsRepository} from "../repositories/blogs-repository";
 
 
-export const postsService = {
+
+
+export class PostsService {
+    postsRepository:PostsRepository
+    blogsRepository:BlogsRepository
+
+    constructor() {
+        this.postsRepository = new PostsRepository()
+        this.blogsRepository = new BlogsRepository()
+    }
 
     async createdPost(newPostCreatedData: postsInoutData): Promise<postType> {
-
-        //let {title, shortDescription, content,blogId} = newPostCreatedData
-
-        const blog = await blogsQueryRepository.findBlogById(newPostCreatedData.blogId)
+        const blog = await  this.blogsRepository.findBlogById(newPostCreatedData.blogId)
 
         const newPost = {
             id: String(+(new Date())),
@@ -20,14 +25,14 @@ export const postsService = {
             ...newPostCreatedData
         }
 
-        const result = await postsRepository.createdPost(newPost)
+        const result = await this.postsRepository.createdPost(newPost)
         // @ts-ignore
         delete newPost._id
 
         return newPost
 
 
-    },
+    }
     async updatePost(postId: string, updatePostData: postsInoutData): Promise<boolean> {
 
         let {title, shortDescription, content, blogId} = updatePostData
@@ -40,15 +45,15 @@ export const postsService = {
             blogId: blogId,
             //blogName: blog?.name
         }
-        const result = await postsRepository.updatePost(postId,updatePost)
+        const result = await this.postsRepository.updatePost(postId,updatePost)
         return result.matchedCount === 1
-    },
+    }
     async deletePost(id: string): Promise<boolean> {
-        const result = await postsRepository.deletePost(id)
+        const result = await this.postsRepository.deletePost(id)
 
         return result.deletedCount === 1
 
-    },
+    }
     async _postMapping(array: postDBType[]): Promise<postType[]> {
         return array.map((post) => {
             return {
@@ -62,5 +67,5 @@ export const postsService = {
             };
         });
     }
-
 }
+

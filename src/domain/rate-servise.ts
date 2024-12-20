@@ -1,14 +1,20 @@
 import {ObjectId} from "mongodb";
-import {rateRepository} from "../repositories/rate-repository";
 import {RareLimitDBClassType} from "../types/rateLimitType";
+import {RateRepository} from "../repositories/rate-repository";
 
 
-class RateService {
+export class RateService {
+
+    rateRepository:RateRepository
+
+    constructor() {
+        this.rateRepository = new RateRepository()
+    }
+
     async createRateLimit(url: string, ip: string, date: number): Promise<boolean> {
 
         const newItem = new RareLimitDBClassType(new ObjectId(), ip, url, date)
-        return await rateRepository.createRateLimit(newItem)
+        return await this.rateRepository.createRateLimit(newItem)
     }
 }
 
-export const rateService = new RateService()

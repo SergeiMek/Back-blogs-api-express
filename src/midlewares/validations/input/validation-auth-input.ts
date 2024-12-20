@@ -1,8 +1,6 @@
-import {body, param} from "express-validator";
+import {body} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
 
-import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
-import {usersRepository} from "../../../repositories/users-repository";
 
 
 const loginOrEmail = body("loginOrEmail")

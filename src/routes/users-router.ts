@@ -4,13 +4,23 @@ import {paginationUsersQueries} from "../helpers/paginations_values";
 import {HTTP_STATUSES} from "../settings";
 import {authBasic} from "../midlewares/auth/auth-basic";
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
-import {usersService} from "../domain/users-service";
-import {usersQueryRepository} from "../repositories/users-query-repository";
+import {UsersService} from "../domain/users-service";
+import {UsersQueryRepository} from "../repositories/users-query-repository";
 
 
 export const usersRouter = Router({})
 
+
 class UsersController {
+
+    usersService: UsersService
+    usersQueryRepository:UsersQueryRepository
+    constructor() {
+        this.usersService = new UsersService()
+        this.usersQueryRepository = new UsersQueryRepository()
+    }
+
+
     async getAllUsers(req: Request<{}, {}, {}, usersQueryType>, res: Response<usersOutputType>) {
         const {
             sortBy,
@@ -20,7 +30,7 @@ class UsersController {
             searchEmailTerm,
             searchLoginTerm
         } = paginationUsersQueries(req)
-        res.status(HTTP_STATUSES.OK_200).json(await usersQueryRepository.getAllUsers({
+        res.status(HTTP_STATUSES.OK_200).json(await this.usersQueryRepository.getAllUsers({
             sortBy,
             sortDirection,
             pageNumber,
@@ -32,15 +42,15 @@ class UsersController {
 
     async createdUser(req: Request<{}, {}, userInputType, {}>, res: Response<usersEntityType | null>) {
         const {login, password, email} = req.body
-        const createdUserId = await usersService.createdUser({login, password, email,})
-        const createdUser = await usersQueryRepository.findUserById(createdUserId)
+        const createdUserId = await this.usersService.createdUser({login, password, email,})
+        const createdUser = await this.usersQueryRepository.findUserById(createdUserId)
 
         res.status(HTTP_STATUSES.CREATED_201).json(createdUser)
     }
 
     async deleteUser(req: Request<{ id: string }>, res: Response<void>) {
 
-        const isDeleted = await usersService.deleteUser(req.params.id)
+        const isDeleted = await this.usersService.deleteUser(req.params.id)
 
         if (isDeleted) {
             res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
@@ -53,6 +63,6 @@ class UsersController {
 const userControllerInstance = new UsersController()
 
 
-usersRouter.get('/', authBasic, userControllerInstance.getAllUsers)
-usersRouter.post('/', authBasic, validationUsersInputPost, userControllerInstance.createdUser)
-usersRouter.delete('/:id', authBasic, userControllerInstance.deleteUser)
+usersRouter.get('/', authBasic, userControllerInstance.getAllUsers.bind(userControllerInstance))
+usersRouter.post('/', authBasic, validationUsersInputPost, userControllerInstance.createdUser.bind(userControllerInstance))
+usersRouter.delete('/:id', authBasic, userControllerInstance.deleteUser.bind(userControllerInstance))

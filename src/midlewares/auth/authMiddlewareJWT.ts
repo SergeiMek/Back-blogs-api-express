@@ -1,8 +1,11 @@
 import {NextFunction, Request, Response} from "express";
 import {HTTP_STATUSES} from "../../settings";
 import {jwtService} from "../../application/jwtService";
-import {usersService} from "../../domain/users-service";
+import {UsersService} from "../../domain/users-service";
 
+
+
+const usersService = new UsersService
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -24,3 +27,4 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     }
 
 }
+

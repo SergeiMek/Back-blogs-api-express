@@ -1,7 +1,6 @@
 import {Request, Response, Router} from "express";
 import {HTTP_STATUSES} from "../settings";
 import {authInputType, recoveryPasswordBodyType, registrationDataType} from "../types/authType";
-import {usersService} from "../domain/users-service";
 import {
     validationAuthInputPost,
     validationConfirmCode,
@@ -9,31 +8,47 @@ import {
 } from "../midlewares/validations/input/validation-auth-input";
 import {jwtService} from "../application/jwtService";
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
-import {authQueryRepository} from "../repositories/auth-query-repository";
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
-import {authService} from "../domain/auth-service";
 import {OutputErrorsType} from "../types/videosType";
-import {devicesService} from "../domain/devices-service";
 import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
 import {rateLimiter} from "../midlewares/rate-limiter";
 import {devicesMongooseModel, usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import {UsersRepository} from "../repositories/users-repository";
+import {UsersService} from "../domain/users-service";
+import {DevicesService} from "../domain/devices-service";
+import {AuthQueryRepository} from "../repositories/auth-query-repository";
+import {AuthService} from "../domain/auth-service";
 
 
 export const authRouter = Router({})
 
+
 class AuthController {
+
+    private usersService: UsersService
+    private devicesService: DevicesService
+    private authQueryRepository: AuthQueryRepository
+    private authService: AuthService
+
+    constructor() {
+        this.usersService = new UsersService()
+        this.devicesService = new DevicesService()
+        this.authQueryRepository = new AuthQueryRepository()
+        this.authService = new AuthService()
+    }
+
     async loginUser(req: Request<{}, {}, authInputType>, res: Response) {
 
         const {loginOrEmail, password} = req.body
 
-        const checkCredentialsUser = await usersService.checkCredentials(loginOrEmail, password)
+        const checkCredentialsUser = await this.usersService.checkCredentials(loginOrEmail, password)
         if (checkCredentialsUser) {
             const ip = req.ip;
             const userAgent = req.headers["user-agent"] || "unknown";
             const newAccessToken = await jwtService.createAccessTokenJWT(checkCredentialsUser)
             const newRefreshToken = await jwtService.createRefreshTokenJWT(checkCredentialsUser)
-            await devicesService.createDevice(newRefreshToken, ip!, userAgent)
+            await this.devicesService.createDevice(newRefreshToken, ip!, userAgent)
 
             res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
             res.status(200).json({accessToken: newAccessToken});
@@ -48,7 +63,7 @@ class AuthController {
         const cookieRefreshTokenObj = await jwtService.verifyToken(cookieRefreshToken)
         if (cookieRefreshTokenObj) {
             const cookieDeviceId = cookieRefreshTokenObj.deviceId
-            await devicesService.deleteDevice(cookieDeviceId)
+            await this.devicesService.deleteDevice(cookieDeviceId)
             res.clearCookie('refreshToken')
             res.sendStatus(204);
         } else {
@@ -63,7 +78,7 @@ class AuthController {
         const deviceId = cookieRefreshTokenObj!.deviceId
         const userId = cookieRefreshTokenObj!.userId.toString()
 
-        const user = await usersService.findUserById(new ObjectId(userId))
+        const user = await this.usersService.findUserById(new ObjectId(userId))
 
 
         const newAccessToken = await jwtService.createAccessTokenJWT(user!, deviceId)
@@ -74,7 +89,7 @@ class AuthController {
 
         const newIssuedAt = newRefreshTokenObj!.iat
 
-        await devicesService.updateDevice(ip, deviceId, newIssuedAt)
+        await this.devicesService.updateDevice(ip, deviceId, newIssuedAt)
 
         res.cookie('refreshToken', newRefreshToken, {
             secure: true,
@@ -90,7 +105,7 @@ class AuthController {
         const errors: OutputErrorsType = {
             errorsMessages: []
         }
-        const confirmCodeResult = await authService.confirmEmail(req.body.code)
+        const confirmCodeResult = await this.authService.confirmEmail(req.body.code)
 
         if (confirmCodeResult.status === 4) {
             errors.errorsMessages.push({
@@ -124,7 +139,7 @@ class AuthController {
         const errors: OutputErrorsType = {
             errorsMessages: []
         }
-        const registrationResult = await authService.registerUser({email, login, password})
+        const registrationResult = await this.authService.registerUser({email, login, password})
 
         if (registrationResult.status === 1) {
             errors.errorsMessages.push({
@@ -160,7 +175,7 @@ class AuthController {
         const errors: OutputErrorsType = {
             errorsMessages: []
         }
-        const registrationResult = await authService.sendPasswordRecoveryCode(email)
+        const registrationResult = await this.authService.sendPasswordRecoveryCode(email)
 
         if (registrationResult.status === 3) {
             errors.errorsMessages.push({
@@ -190,7 +205,7 @@ class AuthController {
             errorsMessages: []
         }
 
-        const result = await authService.resendConfirmationCode(req.body.email)
+        const result = await this.authService.resendConfirmationCode(req.body.email)
         if (result.status === 4) {
             errors.errorsMessages.push({
                 message: 'User by mail not found',
@@ -217,7 +232,7 @@ class AuthController {
 
     async me(req: Request, res: Response) {
 
-        const userData = await authQueryRepository.getUserData(req.user!._id)
+        const userData = await this.authQueryRepository.getUserData(req.user!._id)
         if (userData) {
             res.status(HTTP_STATUSES.OK_200).send(userData)
         } else {
@@ -232,7 +247,7 @@ class AuthController {
         const errors: OutputErrorsType = {
             errorsMessages: []
         }
-        const confirmCodeResult = await authService.changePassword(recoveryCode, newPassword)
+        const confirmCodeResult = await this.authService.changePassword(recoveryCode, newPassword)
 
         if (confirmCodeResult.status === 4) {
             errors.errorsMessages.push({
@@ -259,20 +274,15 @@ class AuthController {
 
 const authControllerInstance = new AuthController()
 
-authRouter.post('/login', rateLimiter, validationAuthInputPost, authControllerInstance.loginUser)
-authRouter.post('/logout', validationRefreshToken, authControllerInstance.logoutUser)
-authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, authControllerInstance.refreshToken)
-authRouter.post('/registration-confirmation', rateLimiter, validationConfirmCode, authControllerInstance.registrationConfirmation)
-authRouter.post('/registration', rateLimiter, validationUsersInputPost, authControllerInstance.registration)
-authRouter.post('/password-recovery', rateLimiter, validationEmail, authControllerInstance.passwordRecovery)
-authRouter.post('/registration-email-resending', rateLimiter, validationEmail, authControllerInstance.registrationEmailResending)
-authRouter.get('/me', authMiddleware, authControllerInstance.me)
-authRouter.post('/new-password', rateLimiter, validationRecoveryPassword, authControllerInstance.newPassword)
-
-
-
-
-
+authRouter.post('/login', rateLimiter, validationAuthInputPost, authControllerInstance.loginUser.bind(authControllerInstance))
+authRouter.post('/logout', validationRefreshToken, authControllerInstance.logoutUser.bind(authControllerInstance))
+authRouter.post('/refresh-token', rateLimiter, validationRefreshToken, authControllerInstance.refreshToken.bind(authControllerInstance))
+authRouter.post('/registration-confirmation', rateLimiter, validationConfirmCode, authControllerInstance.registrationConfirmation.bind(authControllerInstance))
+authRouter.post('/registration', rateLimiter, validationUsersInputPost, authControllerInstance.registration.bind(authControllerInstance))
+authRouter.post('/password-recovery', rateLimiter, validationEmail, authControllerInstance.passwordRecovery.bind(authControllerInstance))
+authRouter.post('/registration-email-resending', rateLimiter, validationEmail, authControllerInstance.registrationEmailResending.bind(authControllerInstance))
+authRouter.get('/me', authMiddleware, authControllerInstance.me.bind(authControllerInstance))
+authRouter.post('/new-password', rateLimiter, validationRecoveryPassword, authControllerInstance.newPassword.bind(authControllerInstance))
 
 
 authRouter.post('/get-users', async (req: Request<{}, {}, { num: string }>, res: Response) => {

@@ -2,15 +2,24 @@ import {Request, Response, Router} from "express";
 import {HTTP_STATUSES} from "../settings";
 import {authInputType} from "../types/authType";
 import {jwtService} from "../application/jwtService";
-import {devicesService} from "../domain/devices-service";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
-import {securityQueryRepository} from "../repositories/security-query-repository";
+import {SecurityQueryRepository} from "../repositories/security-query-repository";
+import {DevicesService} from "../domain/devices-service";
 
 
 export const securityRouter = Router({})
 
 
-class SecurityController {
+export class SecurityController {
+
+    securityQueryRepository: SecurityQueryRepository
+    devicesService: DevicesService
+
+    constructor() {
+        this.securityQueryRepository = new SecurityQueryRepository()
+        this.devicesService = new DevicesService()
+    }
+
     async getAllSessionsForUser(req: Request<{}, {}, authInputType>, res: Response) {
 
         const cookieRefreshToken = req.cookies.refreshToken
@@ -20,7 +29,7 @@ class SecurityController {
             return
         }
 
-        const findDevises = await securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)
+        const findDevises = await this.securityQueryRepository.getAllSessionsForUser(cookieRefreshTokeObj.userId)
         res.status(200).send(findDevises)
         return
     }
@@ -30,7 +39,7 @@ class SecurityController {
     }>, res: Response) {
         const cookieRefreshToken = req.cookies.refreshToken
 
-        const isDeletedStatus = await devicesService.deleteDeviceById(req.params.deviceId, cookieRefreshToken)
+        const isDeletedStatus = await this.devicesService.deleteDeviceById(req.params.deviceId, cookieRefreshToken)
 
         if (isDeletedStatus.status === 2) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
@@ -58,7 +67,7 @@ class SecurityController {
             res.sendStatus(HTTP_STATUSES.UNAUTHORIZED_401)
             return
         }
-        await devicesService.deleteAllOldDevices(cookieRefreshTokeObj.deviceId)
+        await this.devicesService.deleteAllOldDevices(cookieRefreshTokeObj.deviceId)
         res.sendStatus(204)
         return
     }
@@ -66,9 +75,9 @@ class SecurityController {
 
 const securityControllerInstance = new SecurityController()
 
-securityRouter.get('/devices', validationRefreshToken, securityControllerInstance.getAllSessionsForUser)
-securityRouter.delete('/devices/:deviceId', validationRefreshToken, securityControllerInstance.deleteDeviceById)
-securityRouter.delete('/devices', validationRefreshToken, securityControllerInstance.deleteAllOldDevices)
+securityRouter.get('/devices', validationRefreshToken, securityControllerInstance.getAllSessionsForUser.bind(securityControllerInstance))
+securityRouter.delete('/devices/:deviceId', validationRefreshToken, securityControllerInstance.deleteDeviceById.bind(securityControllerInstance))
+securityRouter.delete('/devices', validationRefreshToken, securityControllerInstance.deleteAllOldDevices.bind(securityControllerInstance))
 
 
 

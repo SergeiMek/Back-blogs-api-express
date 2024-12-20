@@ -1,6 +1,5 @@
 import {body} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
-import {validationPostsCreationCustom} from "./validation-posts-input";
 import {validationBlogCreationCustom} from "./validation-blogs-input";
 
 export const validationBlogInPost = [

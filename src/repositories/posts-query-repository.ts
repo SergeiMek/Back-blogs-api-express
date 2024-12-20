@@ -3,7 +3,7 @@ import {postDBType, postType} from "../db/dbType";
 import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class PostsQueryRepository {
+export class PostsQueryRepository {
     async getAllPosts(data: findPostData): Promise<postOutputType> {
         let filter: any = {}
 
@@ -59,4 +59,3 @@ class PostsQueryRepository {
     }
 }
 
-export const postsQueryRepository = new PostsQueryRepository()

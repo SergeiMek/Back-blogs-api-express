@@ -1,8 +1,3 @@
-import {postsInoutData} from "../types/postType";
-import {postDBType, postType} from "../db/dbType";
-import {postsRepository} from "../repositories/posts-repository";
-import {blogsRepository} from "../repositories/blogs-repository";
-import {blogsQueryRepository} from "../repositories/blog-query-repository";
 import {
     CommentatorInfo,
     CommentsBDTypeClass,
@@ -10,10 +5,10 @@ import {
     outputCommentType,
     updateCommentType
 } from "../types/commentsType";
-import {commentsRepository} from "../repositories/comments-repository";
 import {ObjectId} from "mongodb";
-import {usersRepository} from "../repositories/users-repository";
-import any = jasmine.any;
+import {UsersRepository} from "../repositories/users-repository";
+import {PostsRepository} from "../repositories/posts-repository";
+import {CommentsRepository} from "../repositories/comments-repository";
 
 
 enum ResultStatus {
@@ -31,10 +26,21 @@ type Result<T> = {
 }
 
 
-class CommentsService {
+export class CommentsService {
+
+    private usersRepository: UsersRepository
+    private postsRepository: PostsRepository
+    private commentsRepository: CommentsRepository
+
+    constructor() {
+        this.usersRepository = new UsersRepository()
+        this.postsRepository = new PostsRepository()
+        this.commentsRepository = new CommentsRepository()
+    }
+
     async createdComment(commentData: createCommentType): Promise<Result<outputCommentType | null>> {
 
-        const post = await postsRepository.findPostById(commentData.postId)
+        const post = await this.postsRepository.findPostById(commentData.postId)
 
         if (!post) {
             return {
@@ -44,27 +50,15 @@ class CommentsService {
             }
         }
 
-        const user = await usersRepository.findUserById(commentData.userId)
-
-
-        /*const newComment = {
-            _id: new ObjectId(),
-            content: commentData.content,
-            commentatorInfo: {
-                userId: commentData.userId,
-                userLogin: user!.accountData.login
-            },
-            createdAt: new Date().toISOString(),
-            postId: commentData.postId
-        }*/
+        const user = await this.usersRepository.findUserById(commentData.userId)
 
         const newComment = new CommentsBDTypeClass(new ObjectId(), commentData.content,
             new Date().toISOString(), commentData.postId,
             new CommentatorInfo(commentData.userId, user!.accountData.login)
         )
 
-        const commentId = await commentsRepository.createComments(newComment)
-        const createdComment = await commentsRepository.findCommentById(commentId.toString())
+        const commentId = await this.commentsRepository.createComments(newComment)
+        const createdComment = await this.commentsRepository.findCommentById(commentId.toString())
         if (createdComment) {
             return {
                 status: ResultStatus.Success,
@@ -89,7 +83,7 @@ class CommentsService {
 
     async updateComment(updateData: updateCommentType): Promise<Result<boolean | null>> {
 
-        const comment = await commentsRepository.findCommentById(updateData.commentId)
+        const comment = await this.commentsRepository.findCommentById(updateData.commentId)
         if (!comment) {
             return {
                 status: ResultStatus.NotFound,
@@ -103,7 +97,7 @@ class CommentsService {
                 data: null
             }
         }
-        const isUpdated = await commentsRepository.updateComment(updateData.commentId, updateData.content)
+        const isUpdated = await this.commentsRepository.updateComment(updateData.commentId, updateData.content)
         if (isUpdated) {
             return {
                 status: ResultStatus.Success,
@@ -119,7 +113,7 @@ class CommentsService {
     async deleteComment(id: string, userId: ObjectId): Promise<Result<boolean | null>> {
 
 
-        const comment = await commentsRepository.findCommentById(id)
+        const comment = await this.commentsRepository.findCommentById(id)
         if (!comment) {
             return {
                 status: ResultStatus.NotFound,
@@ -132,7 +126,7 @@ class CommentsService {
                 data: null
             }
         }
-        const deletedComments = await commentsRepository.deleteComment(id)
+        const deletedComments = await this.commentsRepository.deleteComment(id)
         if (deletedComments) {
             return {
                 status: ResultStatus.Success,
@@ -146,4 +140,3 @@ class CommentsService {
     }
 }
 
-export const commentsService = new CommentsService()

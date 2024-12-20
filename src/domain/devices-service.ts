@@ -1,8 +1,8 @@
 import {deviceDBType} from "../db/dbType";
 import {ObjectId} from "mongodb";
 import {jwtService} from "../application/jwtService";
-import {devicesRepository} from "../repositories/devices-repository";
 import {deviseDBClassType} from "../types/diviceType";
+import {DevicesRepository} from "../repositories/devices-repository";
 
 
 enum ResultStatus {
@@ -20,7 +20,14 @@ type Result<T> = {
 }
 
 
-class DevicesService {
+export class DevicesService {
+
+    devicesRepository: DevicesRepository
+
+    constructor() {
+        this.devicesRepository = new DevicesRepository()
+    }
+
     async createDevice(newRefreshToken: string, ip: string, userAgent: string) {
         const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken);
         if (!newRefreshTokenObj) {
@@ -32,15 +39,14 @@ class DevicesService {
         const issuedAt = newRefreshTokenObj.iat;
 
 
+        const newDevice = new deviseDBClassType(new ObjectId, ip, userAgent, userId, deviceId, issuedAt, expirationDate)
 
-        const newDevice =new deviseDBClassType(new ObjectId,ip,userAgent,userId, deviceId,issuedAt, expirationDate)
-
-        return await devicesRepository.createDevice(newDevice)
+        return await this.devicesRepository.createDevice(newDevice)
 
     }
 
     async deleteDevice(deviceId: string): Promise<boolean> {
-        return await devicesRepository.deleteDevice(deviceId)
+        return await this.devicesRepository.deleteDevice(deviceId)
     }
 
     async deleteDeviceById(deviceId: string, refreshToken: string): Promise<Result<null | boolean>> {
@@ -69,7 +75,7 @@ class DevicesService {
                 data: null
             }
         }
-        const deleted = await devicesRepository.deleteDevice(deviceId)
+        const deleted = await this.devicesRepository.deleteDevice(deviceId)
         if (deleted) {
             return {
                 status: ResultStatus.Success,
@@ -85,16 +91,15 @@ class DevicesService {
     }
 
     async findDeviceByDeviceId(deviceId: string): Promise<deviceDBType | null> {
-        return await devicesRepository.findDeviceByDeviceId(deviceId)
+        return await this.devicesRepository.findDeviceByDeviceId(deviceId)
     }
 
     async updateDevice(ip: string, deviceId: string, issuedAt: number): Promise<boolean> {
-        return await devicesRepository.updateDevice(ip, deviceId, issuedAt)
+        return await this.devicesRepository.updateDevice(ip, deviceId, issuedAt)
     }
 
     async deleteAllOldDevices(currentDevice: string): Promise<boolean> {
-        return await devicesRepository.deleteAllOldDevices(currentDevice)
+        return await this.devicesRepository.deleteAllOldDevices(currentDevice)
     }
 }
 
-export const devicesService = new DevicesService()

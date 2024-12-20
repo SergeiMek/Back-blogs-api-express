@@ -2,18 +2,28 @@ import {Request, Response, Router} from "express";
 import {HTTP_STATUSES} from "../settings";
 import {validationCommentsInputPost} from "../midlewares/validations/input/validation-comments-input";
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
-import {commentsService} from "../domain/comments-service";
 import {outputCommentType} from "../types/commentsType";
-import {commentsQueryRepository} from "../repositories/comments-query-repository";
+import {CommentsQueryRepository} from "../repositories/comments-query-repository";
+import {CommentsService} from "../domain/comments-service";
 
 
 export const commentsRouter = Router({})
 
 
 class CommentsController {
+
+    private commentsQueryRepository: CommentsQueryRepository
+    private commentsService: CommentsService
+
+    constructor() {
+        this.commentsQueryRepository = new CommentsQueryRepository()
+        this.commentsService = new CommentsService()
+    }
+
+
     async getCommentById(req: Request<{ id: string }>, res: Response<outputCommentType>) {
 
-        const comment = await commentsQueryRepository.getCommentById(req.params.id)
+        const comment = await this.commentsQueryRepository.getCommentById(req.params.id)
 
         if (comment) {
             res.status(HTTP_STATUSES.OK_200).json(comment)
@@ -32,7 +42,7 @@ class CommentsController {
             content: req.body.content
         }
 
-        const isUpdatedStatus = await commentsService.updateComment(commentData)
+        const isUpdatedStatus = await this.commentsService.updateComment(commentData)
 
 
         if (isUpdatedStatus.status === 2) {
@@ -48,7 +58,7 @@ class CommentsController {
 
     async deleteComment(req: Request<{ commentId: string }>, res: Response) {
 
-        const isDeleted = await commentsService.deleteComment(req.params.commentId, req.user!._id)
+        const isDeleted = await this.commentsService.deleteComment(req.params.commentId, req.user!._id)
 
 
         if (isDeleted.status === 2) {
@@ -70,11 +80,9 @@ class CommentsController {
 const commentsControllerInstance = new CommentsController()
 
 
-
-
-commentsRouter.get('/:id', commentsControllerInstance.getCommentById)
-commentsRouter.put('/:commentId', authMiddleware, validationCommentsInputPost, commentsControllerInstance.updateComment)
-commentsRouter.delete('/:commentId', authMiddleware, commentsControllerInstance.deleteComment)
+commentsRouter.get('/:id', commentsControllerInstance.getCommentById.bind(commentsControllerInstance))
+commentsRouter.put('/:commentId', authMiddleware, validationCommentsInputPost, commentsControllerInstance.updateComment.bind(commentsControllerInstance))
+commentsRouter.delete('/:commentId', authMiddleware, commentsControllerInstance.deleteComment.bind(commentsControllerInstance))
 
 
 

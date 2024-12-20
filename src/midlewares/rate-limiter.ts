@@ -1,8 +1,8 @@
 import {NextFunction, Request, Response} from "express";
-import {rateService} from "../domain/rate-servise";
+import {RateService} from "../domain/rate-servise";
 import {limitsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
-
+const rateService = new RateService()
 
 export const rateLimiter = async (
     req: Request,

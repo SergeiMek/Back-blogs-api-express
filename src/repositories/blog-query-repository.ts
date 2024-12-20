@@ -3,7 +3,7 @@ import {blogDataFindType, blogQueryOutputType} from "../types/blogType";
 import {blogsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class BlogQueryRepository {
+export class BlogQueryRepository {
     async getAllBlogs(queryData: blogDataFindType): Promise<blogQueryOutputType> {
 
         const filter: any = {}
@@ -56,4 +56,3 @@ class BlogQueryRepository {
     }
 }
 
-export const blogsQueryRepository = new BlogQueryRepository()

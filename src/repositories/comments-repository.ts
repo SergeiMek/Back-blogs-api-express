@@ -3,7 +3,7 @@ import {commentType} from "../types/commentsType";
 import {commentsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class CommentsRepository {
+export class CommentsRepository {
     async createComments(newCommentData: commentType): Promise<ObjectId> {
         const result = await commentsMongooseModel.create(newCommentData)
         return result._id
@@ -33,4 +33,3 @@ class CommentsRepository {
     }
 }
 
-export const commentsRepository = new CommentsRepository()

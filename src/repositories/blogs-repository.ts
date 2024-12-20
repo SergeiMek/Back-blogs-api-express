@@ -4,7 +4,7 @@ import {DeleteResult, UpdateResult} from "mongodb";
 import {blogsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class BlogsRepository {
+export class BlogsRepository {
     async createdBlog(newBlogCreatedData: blogInputPostDat): Promise<blogsType> {
 
         const newBlog = {
@@ -24,11 +24,15 @@ class BlogsRepository {
         return blogsMongooseModel.updateOne({id: blogId}, {$set: updateVideoData})
     }
 
+    async findBlogById(blogId:string){
+        return blogsMongooseModel.findOne({id: blogId})
+    }
+
     async deleteBlog(id: string): Promise<DeleteResult> {
         // return await blogsCollection.deleteOne({id: id})
         return blogsMongooseModel.deleteOne({id: id})
     }
 }
 
-export const blogsRepository = new BlogsRepository()
+
 

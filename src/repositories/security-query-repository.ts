@@ -4,7 +4,7 @@ import {devicesMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
 
-class SecurityQueryRepository{
+export class SecurityQueryRepository{
     async getAllSessionsForUser(userId: string) {
 
         const devises = await devicesMongooseModel.find({userId:userId}).lean()
@@ -24,4 +24,3 @@ class SecurityQueryRepository{
     }
 }
 
-export const securityQueryRepository = new SecurityQueryRepository()

@@ -10,8 +10,8 @@ import {usersDBType} from "../db/dbType";
 import {ObjectId} from "mongodb";
 import {add} from "date-fns";
 import {emailManager} from "../adapters/email-manager";
-import {usersRepository} from "../repositories/users-repository";
 import {v4 as uuidv4} from 'uuid';
+import {UsersRepository} from "../repositories/users-repository";
 
 
 enum ResultStatus {
@@ -32,11 +32,17 @@ type Result<T> = {
 }
 
 
-class AuthService {
+export class AuthService {
+
+    private usersRepository: UsersRepository
+
+    constructor() {
+        this.usersRepository = new UsersRepository()
+    }
     async registerUser(registerData: registrationDataType): Promise<Result<null>> {
 
-        const findUserByLogin = await usersRepository.findByLoginOrEmail(registerData.login)
-        const findUserByEmail = await usersRepository.findByLoginOrEmail(registerData.email)
+        const findUserByLogin = await this.usersRepository.findByLoginOrEmail(registerData.login)
+        const findUserByEmail = await this.usersRepository.findByLoginOrEmail(registerData.email)
 
         if (findUserByEmail) {
             return {
@@ -62,7 +68,7 @@ class AuthService {
             new PasswordRecovery(null,null)
             )
 
-        const createResult = await usersRepository.createdUser(newUser)
+        const createResult = await this.usersRepository.createdUser(newUser)
 
         try {
             await emailManager.sendRegistrationEmail(
@@ -71,7 +77,7 @@ class AuthService {
             );
         } catch (error) {
             console.error(error);
-            await usersRepository.deleteUser(newUser._id.toString())
+            await this.usersRepository.deleteUser(newUser._id.toString())
             return {
                 status: ResultStatus.ErrorMessage,
                 data: null
@@ -86,7 +92,7 @@ class AuthService {
     }
 
     async resendConfirmationCode(email: string): Promise<Result<null>> {
-        const user = await usersRepository.findByLoginOrEmail(email)
+        const user = await this.usersRepository.findByLoginOrEmail(email)
         if (!user) return {
             status: ResultStatus.NotUser,
             data: null
@@ -108,7 +114,7 @@ class AuthService {
                 data: null
             }
         }
-        const updated = await usersRepository.updateConfirmationCode(user._id, newConfirmationCode)
+        const updated = await this.usersRepository.updateConfirmationCode(user._id, newConfirmationCode)
         return {
             status: ResultStatus.Success,
             data: null
@@ -116,7 +122,7 @@ class AuthService {
     }
 
     async confirmEmail(code: string): Promise<Result<null>> {
-        const user = await usersRepository.findUserByConfirmCode(code)
+        const user = await this.usersRepository.findUserByConfirmCode(code)
         if (!user) return {
             status: ResultStatus.NotUser,
             data: null
@@ -130,7 +136,7 @@ class AuthService {
             data: null
         }
 
-        const update = await usersRepository.updateConfirmationStatus(user._id)
+        const update = await this.usersRepository.updateConfirmationStatus(user._id)
         return {
             status: ResultStatus.Success,
             data: null
@@ -138,7 +144,7 @@ class AuthService {
     }
 
     async sendPasswordRecoveryCode(email: string): Promise<Result<null>> {
-        const user = await usersRepository.findByLoginOrEmail(email)
+        const user = await this.usersRepository.findByLoginOrEmail(email)
         if (!user) return {
             status: ResultStatus.NotUser,
             data: null
@@ -159,7 +165,7 @@ class AuthService {
                 data: null
             }
         }
-        const result = await usersRepository.updatePasswordRecoveryData(userId, expirationDate, recoveryCode)
+        const result = await this.usersRepository.updatePasswordRecoveryData(userId, expirationDate, recoveryCode)
 
         if (!result) {
             return {
@@ -184,7 +190,7 @@ class AuthService {
         const passwordSalt = await bcrypt.genSalt(10)
         const passwordHash = await this._generateHash(password, passwordSalt)
 
-        const result = await usersRepository.updatePassword(user._id, passwordSalt, passwordHash)
+        const result = await this.usersRepository.updatePassword(user._id, passwordSalt, passwordHash)
 
         if (!result) {
             return {
@@ -200,7 +206,7 @@ class AuthService {
     }
 
     async findUserByPasswordRecoveryCode(recoveryCode: string): Promise<usersDBType | null> {
-        return await usersRepository.findUserByPasswordRecoveryCode(recoveryCode)
+        return await this.usersRepository.findUserByPasswordRecoveryCode(recoveryCode)
 
     }
 
@@ -210,4 +216,4 @@ class AuthService {
 
 }
 
-export const authService = new AuthService()
+

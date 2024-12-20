@@ -4,11 +4,14 @@ import {
     inputCheckPostIdMiddleware
 
 } from "../_validation-error-check";
+import {BlogQueryRepository} from "../../../repositories/blog-query-repository";
 
-import {blogsQueryRepository} from "../../../repositories/blog-query-repository";
 
 const websiteUrlPattern =
     /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/;
+
+
+const  blogsQueryRepository = new BlogQueryRepository()
 
 export const validationBlogsInput = [
     body("name")

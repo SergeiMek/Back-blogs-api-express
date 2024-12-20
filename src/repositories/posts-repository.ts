@@ -4,7 +4,7 @@ import {DeleteResult, UpdateResult} from "mongodb";
 import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 
 
-class PostsRepository {
+export class PostsRepository {
     async createdPost(newPostCreatedData: postType): Promise<postType> {
         const smartUserModel = new postsMongooseModel(newPostCreatedData);
         await smartUserModel.save();
@@ -27,4 +27,3 @@ class PostsRepository {
     }
 }
 
-export const postsRepository = new PostsRepository()
