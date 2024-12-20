@@ -5,11 +5,9 @@ import {BlogDBTypeClass, blogInputData, blogInputPostDat} from "../types/blogTyp
 
 export class BlogsService{
 
-    private blogsRepository:BlogsRepository
 
-    constructor() {
-        this.blogsRepository = new BlogsRepository()
-    }
+
+    constructor(protected blogsRepository:BlogsRepository) {}
 
     async createdBlog(newBlogCreatedData: blogInputPostDat): Promise<blogsType> {
 

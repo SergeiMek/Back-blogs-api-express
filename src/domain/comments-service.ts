@@ -28,14 +28,12 @@ type Result<T> = {
 
 export class CommentsService {
 
-    private usersRepository: UsersRepository
-    private postsRepository: PostsRepository
-    private commentsRepository: CommentsRepository
 
-    constructor() {
-        this.usersRepository = new UsersRepository()
-        this.postsRepository = new PostsRepository()
-        this.commentsRepository = new CommentsRepository()
+    constructor(
+        protected usersRepository: UsersRepository,
+        protected postsRepository: PostsRepository,
+        protected commentsRepository: CommentsRepository
+    ) {
     }
 
     async createdComment(commentData: createCommentType): Promise<Result<outputCommentType | null>> {

@@ -22,11 +22,7 @@ type Result<T> = {
 
 export class DevicesService {
 
-    devicesRepository: DevicesRepository
-
-    constructor() {
-        this.devicesRepository = new DevicesRepository()
-    }
+    constructor(protected devicesRepository: DevicesRepository) {}
 
     async createDevice(newRefreshToken: string, ip: string, userAgent: string) {
         const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken);

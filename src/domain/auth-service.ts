@@ -34,11 +34,7 @@ type Result<T> = {
 
 export class AuthService {
 
-    private usersRepository: UsersRepository
-
-    constructor() {
-        this.usersRepository = new UsersRepository()
-    }
+    constructor(protected usersRepository: UsersRepository) {}
     async registerUser(registerData: registrationDataType): Promise<Result<null>> {
 
         const findUserByLogin = await this.usersRepository.findByLoginOrEmail(registerData.login)

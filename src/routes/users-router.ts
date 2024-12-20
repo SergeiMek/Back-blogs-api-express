@@ -1,24 +1,25 @@
 import {Request, Response, Router} from "express";
+import {UsersService} from "../domain/users-service";
+import {UsersQueryRepository} from "../repositories/users-query-repository";
 import {userInputType, usersEntityType, usersOutputType, usersQueryType} from "../types/usersType";
 import {paginationUsersQueries} from "../helpers/paginations_values";
 import {HTTP_STATUSES} from "../settings";
 import {authBasic} from "../midlewares/auth/auth-basic";
+
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
-import {UsersService} from "../domain/users-service";
-import {UsersQueryRepository} from "../repositories/users-query-repository";
+import {usersQueryRepository, usersService} from "../commposition-root";
 
 
 export const usersRouter = Router({})
 
 
-class UsersController {
+export class UsersController {
 
-    usersService: UsersService
-    usersQueryRepository:UsersQueryRepository
-    constructor() {
-        this.usersService = new UsersService()
-        this.usersQueryRepository = new UsersQueryRepository()
-    }
+
+    constructor(
+        protected usersService: UsersService,
+        protected usersQueryRepository: UsersQueryRepository
+       ) {}
 
 
     async getAllUsers(req: Request<{}, {}, {}, usersQueryType>, res: Response<usersOutputType>) {
@@ -60,8 +61,8 @@ class UsersController {
     }
 }
 
-const userControllerInstance = new UsersController()
 
+export const userControllerInstance = new UsersController(usersService, usersQueryRepository)
 
 usersRouter.get('/', authBasic, userControllerInstance.getAllUsers.bind(userControllerInstance))
 usersRouter.post('/', authBasic, validationUsersInputPost, userControllerInstance.createdUser.bind(userControllerInstance))

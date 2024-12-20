@@ -2,9 +2,10 @@ import {NextFunction, Request, Response} from "express";
 import {HTTP_STATUSES} from "../../settings";
 import {jwtService} from "../../application/jwtService";
 import {DevicesService} from "../../domain/devices-service";
+import {DevicesRepository} from "../../repositories/devices-repository";
 
 
-const devicesService = new DevicesService()
+const devicesService = new DevicesService(new DevicesRepository())
 export const validationDeviceOwner = async (req: Request, res: Response, next: NextFunction) => {
 
     const cookieRefreshToken = req.cookies.refreshToken;

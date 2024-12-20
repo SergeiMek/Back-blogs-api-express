@@ -19,23 +19,26 @@ import {UsersService} from "../domain/users-service";
 import {DevicesService} from "../domain/devices-service";
 import {AuthQueryRepository} from "../repositories/auth-query-repository";
 import {AuthService} from "../domain/auth-service";
+import {authQueryRepository, authService, devicesService, usersService} from "../commposition-root";
+
 
 
 export const authRouter = Router({})
 
 
-class AuthController {
+export class AuthController {
 
-    private usersService: UsersService
-    private devicesService: DevicesService
-    private authQueryRepository: AuthQueryRepository
-    private authService: AuthService
+    constructor(
+        protected usersService: UsersService,
+        protected devicesService: DevicesService,
+        protected authQueryRepository: AuthQueryRepository,
+        protected authService: AuthService,
 
-    constructor() {
-        this.usersService = new UsersService()
-        this.devicesService = new DevicesService()
-        this.authQueryRepository = new AuthQueryRepository()
-        this.authService = new AuthService()
+    ) {
+        //this.usersService = new UsersService()
+        //this.devicesService = new DevicesService()
+        //this.authQueryRepository = new AuthQueryRepository()
+        //this.authService = new AuthService()
     }
 
     async loginUser(req: Request<{}, {}, authInputType>, res: Response) {
@@ -271,8 +274,8 @@ class AuthController {
     }
 }
 
+const authControllerInstance = new AuthController(usersService, devicesService, authQueryRepository, authService)
 
-const authControllerInstance = new AuthController()
 
 authRouter.post('/login', rateLimiter, validationAuthInputPost, authControllerInstance.loginUser.bind(authControllerInstance))
 authRouter.post('/logout', validationRefreshToken, authControllerInstance.logoutUser.bind(authControllerInstance))

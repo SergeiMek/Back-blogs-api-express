@@ -5,19 +5,19 @@ import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
 import {outputCommentType} from "../types/commentsType";
 import {CommentsQueryRepository} from "../repositories/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
+import { commentsQueryRepository, commentsService} from "../commposition-root";
 
 
 export const commentsRouter = Router({})
 
 
-class CommentsController {
+export class CommentsController {
 
-    private commentsQueryRepository: CommentsQueryRepository
-    private commentsService: CommentsService
 
-    constructor() {
-        this.commentsQueryRepository = new CommentsQueryRepository()
-        this.commentsService = new CommentsService()
+    constructor(
+        protected commentsQueryRepository: CommentsQueryRepository,
+        protected commentsService: CommentsService
+    ) {
     }
 
 
@@ -77,7 +77,7 @@ class CommentsController {
     }
 }
 
-const commentsControllerInstance = new CommentsController()
+const commentsControllerInstance = new CommentsController(commentsQueryRepository, commentsService)
 
 
 commentsRouter.get('/:id', commentsControllerInstance.getCommentById.bind(commentsControllerInstance))

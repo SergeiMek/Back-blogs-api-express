@@ -4,19 +4,15 @@ import {PostsRepository} from "../repositories/posts-repository";
 import {BlogsRepository} from "../repositories/blogs-repository";
 
 
-
-
 export class PostsService {
-    postsRepository:PostsRepository
-    blogsRepository:BlogsRepository
-
-    constructor() {
-        this.postsRepository = new PostsRepository()
-        this.blogsRepository = new BlogsRepository()
+    constructor(
+        protected postsRepository: PostsRepository,
+        protected blogsRepository: BlogsRepository
+    ) {
     }
 
     async createdPost(newPostCreatedData: postsInoutData): Promise<postType> {
-        const blog = await  this.blogsRepository.findBlogById(newPostCreatedData.blogId)
+        const blog = await this.blogsRepository.findBlogById(newPostCreatedData.blogId)
 
         const newPost = {
             id: String(+(new Date())),
@@ -33,6 +29,7 @@ export class PostsService {
 
 
     }
+
     async updatePost(postId: string, updatePostData: postsInoutData): Promise<boolean> {
 
         let {title, shortDescription, content, blogId} = updatePostData
@@ -45,15 +42,17 @@ export class PostsService {
             blogId: blogId,
             //blogName: blog?.name
         }
-        const result = await this.postsRepository.updatePost(postId,updatePost)
+        const result = await this.postsRepository.updatePost(postId, updatePost)
         return result.matchedCount === 1
     }
+
     async deletePost(id: string): Promise<boolean> {
         const result = await this.postsRepository.deletePost(id)
 
         return result.deletedCount === 1
 
     }
+
     async _postMapping(array: postDBType[]): Promise<postType[]> {
         return array.map((post) => {
             return {

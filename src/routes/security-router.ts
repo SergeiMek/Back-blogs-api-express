@@ -5,6 +5,7 @@ import {jwtService} from "../application/jwtService";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
 import {SecurityQueryRepository} from "../repositories/security-query-repository";
 import {DevicesService} from "../domain/devices-service";
+import {devicesService, securityQueryRepository} from "../commposition-root";
 
 
 export const securityRouter = Router({})
@@ -12,12 +13,10 @@ export const securityRouter = Router({})
 
 export class SecurityController {
 
-    securityQueryRepository: SecurityQueryRepository
-    devicesService: DevicesService
 
-    constructor() {
-        this.securityQueryRepository = new SecurityQueryRepository()
-        this.devicesService = new DevicesService()
+    constructor(
+        protected securityQueryRepository: SecurityQueryRepository,
+        protected devicesService: DevicesService) {
     }
 
     async getAllSessionsForUser(req: Request<{}, {}, authInputType>, res: Response) {
@@ -73,7 +72,8 @@ export class SecurityController {
     }
 }
 
-const securityControllerInstance = new SecurityController()
+const securityControllerInstance = new SecurityController(securityQueryRepository,devicesService)
+
 
 securityRouter.get('/devices', validationRefreshToken, securityControllerInstance.getAllSessionsForUser.bind(securityControllerInstance))
 securityRouter.delete('/devices/:deviceId', validationRefreshToken, securityControllerInstance.deleteDeviceById.bind(securityControllerInstance))

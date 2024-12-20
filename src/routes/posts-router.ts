@@ -12,22 +12,25 @@ import {PostsService} from "../domain/posts-service";
 import {PostsQueryRepository} from "../repositories/posts-query-repository";
 import {CommentsQueryRepository} from "../repositories/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
+import {
+    commentsQueryRepository, commentsService,
+    postsQueryRepository,
+    postsService
+} from "../commposition-root";
 
 
 export const postsRouter = Router({})
 
 
-class PostsController {
-    postsService: PostsService
-    postsQueryRepository: PostsQueryRepository
-    commentsQueryRepository: CommentsQueryRepository
-    commentsService: CommentsService
+export class PostsController {
 
-    constructor() {
-        this.postsService = new PostsService()
-        this.commentsQueryRepository = new CommentsQueryRepository()
-        this.postsQueryRepository = new PostsQueryRepository()
-        this.commentsService = new CommentsService()
+
+    constructor(
+        protected postsService: PostsService,
+        protected postsQueryRepository: PostsQueryRepository,
+        protected commentsQueryRepository: CommentsQueryRepository,
+        protected commentsService: CommentsService
+    ) {
     }
 
     async getAllPosts(req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) {
@@ -123,7 +126,9 @@ class PostsController {
     }
 }
 
-const postsControllerInstance = new PostsController()
+
+const postsControllerInstance = new PostsController(postsService, postsQueryRepository, commentsQueryRepository, commentsService)
+
 
 postsRouter.get('/', postsControllerInstance.getAllPosts.bind(postsControllerInstance))
 postsRouter.get('/:id', postsControllerInstance.findPostById.bind(postsControllerInstance))

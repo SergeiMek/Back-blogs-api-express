@@ -2,10 +2,11 @@ import {NextFunction, Request, Response} from "express";
 import {HTTP_STATUSES} from "../../settings";
 import {jwtService} from "../../application/jwtService";
 import {UsersService} from "../../domain/users-service";
+import {UsersRepository} from "../../repositories/users-repository";
 
 
 
-const usersService = new UsersService
+const usersService = new UsersService(new UsersRepository())
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
 

@@ -8,11 +8,7 @@ import {AccountData, AuthDBTypeClass, EmailConfirmation, PasswordRecovery} from 
 
 export class UsersService {
 
-  private usersRepository: UsersRepository
-
-    constructor() {
-        this.usersRepository = new UsersRepository()
-    }
+    constructor(protected usersRepository: UsersRepository ) {}
 
     async createdUser(userCreatedData: userInputType): Promise<string> {
 
