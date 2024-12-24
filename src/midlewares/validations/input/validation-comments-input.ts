@@ -2,8 +2,7 @@ import {body} from "express-validator";
 import {inputCheckErrorsMiddleware} from "../_validation-error-check";
 
 
-
-const  content= body("content")
+const content = body("content")
     .exists()
     .withMessage("Content is required")
     .isString()
@@ -17,8 +16,16 @@ const  content= body("content")
         "Content length must be more than 20 and less than or equal to 300 symbols"
     )
 
+const likeStatus = body("likeStatus")
+        .exists()
+        .withMessage("LikeStatus is required")
+        .isString()
+        .withMessage("Type of LikeStatus must be string")
+        .trim()
+        .isIn(["None", "Like", "Dislike"])
+        .withMessage(`Like status should be None, Like or Dislike`)
 
 
-
-
-export const validationCommentsInputPost = [content, inputCheckErrorsMiddleware]
+    export
+const validationCommentsInputPost = [content, inputCheckErrorsMiddleware]
+export const validationUpdateLikeStatus = [likeStatus,inputCheckErrorsMiddleware]

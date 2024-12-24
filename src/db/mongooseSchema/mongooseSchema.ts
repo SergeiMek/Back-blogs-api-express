@@ -1,8 +1,15 @@
 import mongoose, {Schema} from "mongoose";
-import {blogsType, commentsDBType, deviceDBType, postType, rateLimitType, usersDBType, videoType} from "../dbType";
+import {
+    blogsType,
+    commentsDBType,
+    deviceDBType,
+    likeStatus,
+    postType,
+    rateLimitType,
+    usersDBType,
+    videoType
+} from "../dbType";
 import {ObjectId, WithId} from "mongodb";
-
-
 
 
 const videosSchema = new mongoose.Schema<WithId<videoType>>({
@@ -49,9 +56,9 @@ const usersSchema = new mongoose.Schema<WithId<usersDBType>>({
         expirationData: Date,
         isConfirmed: {type: Boolean, required: true}
     },
-    passwordRecovery:{
-        recoveryCode:String,
-        expirationDate:Date
+    passwordRecovery: {
+        recoveryCode: String,
+        expirationDate: Date
     }
 }, {versionKey: false})
 
@@ -62,8 +69,13 @@ const commentSchema = new mongoose.Schema<WithId<commentsDBType>>({
         userLogin: {type: String, required: true},
     },
     createdAt: {type: String, required: true},
-    postId: {type: String, required: true}
-},{versionKey: false})
+    postId: {type: String, required: true},
+    likesInfo: {
+        likesCount: {type: Number, required: true},
+        dislikesCount: {type: Number, required: true},
+        users: [{userId: String, likeStatus: String}],
+    }
+}, {versionKey: false})
 
 const deviceSchema = new mongoose.Schema<WithId<deviceDBType>>({
     ip: {type: String, required: true},
@@ -72,13 +84,13 @@ const deviceSchema = new mongoose.Schema<WithId<deviceDBType>>({
     deviceId: {type: String, required: true},
     lastActiveDate: {type: Number, required: true},
     expirationDate: {type: Number, required: true},
-},{versionKey: false})
+}, {versionKey: false})
 
 const rateLimitSchema = new mongoose.Schema<WithId<rateLimitType>>({
     ip: {type: String, required: true},
     URL: {type: String, required: true},
     date: {type: Number, required: true},
-},{versionKey: false})
+}, {versionKey: false})
 
 
 export const videosMongooseModel = mongoose.model('videos', videosSchema)
@@ -90,7 +102,7 @@ export const devicesMongooseModel = mongoose.model('device', deviceSchema)
 export const limitsMongooseModel = mongoose.model('limit', rateLimitSchema)
 
 
-export async function deleteDB(){
+export async function deleteDB() {
     await videosMongooseModel.deleteMany()
     await postsMongooseModel.deleteMany()
     await blogsMongooseModel.deleteMany()

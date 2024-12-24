@@ -2,13 +2,15 @@ import {
     CommentatorInfo,
     CommentsBDTypeClass,
     createCommentType,
-    outputCommentType,
-    updateCommentType
+    LikesInfo,
+    outputCreateCommentData,
+    updateCommentType, updateLikeStatusType
 } from "../types/commentsType";
 import {ObjectId} from "mongodb";
 import {UsersRepository} from "../repositories/users-repository";
 import {PostsRepository} from "../repositories/posts-repository";
 import {CommentsRepository} from "../repositories/comments-repository";
+import {likeStatus} from "../db/dbType";
 
 
 enum ResultStatus {
@@ -36,7 +38,7 @@ export class CommentsService {
     ) {
     }
 
-    async createdComment(commentData: createCommentType): Promise<Result<outputCommentType | null>> {
+    async createdComment(commentData: createCommentType): Promise<Result<null | outputCreateCommentData>> {
 
         const post = await this.postsRepository.findPostById(commentData.postId)
 
@@ -52,8 +54,10 @@ export class CommentsService {
 
         const newComment = new CommentsBDTypeClass(new ObjectId(), commentData.content,
             new Date().toISOString(), commentData.postId,
-            new CommentatorInfo(commentData.userId, user!.accountData.login)
+            new CommentatorInfo(commentData.userId, user!.accountData.login),
+            new LikesInfo(0, 0, [])
         )
+
 
         const commentId = await this.commentsRepository.createComments(newComment)
         const createdComment = await this.commentsRepository.findCommentById(commentId.toString())
@@ -67,7 +71,12 @@ export class CommentsService {
                         userId: createdComment.commentatorInfo.userId,
                         userLogin: createdComment.commentatorInfo.userLogin
                     },
-                    createdAt: createdComment.createdAt
+                    createdAt: createdComment.createdAt,
+                    likesInfo: {
+                        likesCount: createdComment.likesInfo.likesCount,
+                        dislikesCount: createdComment.likesInfo.dislikesCount,
+                        myStatus: "None"
+                    }
                 }
             }
         } else {
@@ -106,6 +115,79 @@ export class CommentsService {
             status: ResultStatus.ServerError,
             data: null
         }
+    }
+
+    async updateLikeStatus(updateData: updateLikeStatusType): Promise<Result<boolean | null>> {
+
+        const foundComments = await this.commentsRepository.findCommentById(updateData.commentId)
+        if (!foundComments) {
+            return {
+                status: ResultStatus.NotFound,
+                data: null
+            }
+        }
+
+        let likesCount = foundComments.likesInfo.likesCount
+        let dislikesCount = foundComments.likesInfo.dislikesCount
+
+        const foundUser = await this.commentsRepository.findUserInLikeInfo(updateData.commentId, updateData.userId)
+
+        if (!foundComments) {
+            await this.commentsRepository.pushUserInLikesInfo(updateData.commentId, updateData.userId, updateData.likeStatus)
+
+            if (updateData.likeStatus === "Like") {
+                likesCount++
+            }
+            if (updateData.likeStatus === "Dislike") {
+                dislikesCount++
+            }
+            await this.commentsRepository.updateLikesCount(updateData.commentId, likesCount, dislikesCount)
+            return {
+                status: ResultStatus.Success,
+                data: null
+            }
+
+        }
+
+        const userLikeStatus = await this.commentsRepository.findUserLikeStatus(updateData.commentId, updateData.userId)
+
+
+        switch (userLikeStatus) {
+            case "None":
+                if (updateData.likeStatus === "Like") {
+                    likesCount++
+                }
+                if (updateData.likeStatus === "Dislike") {
+                    dislikesCount++
+                }
+                break
+            case "Like":
+                if (updateData.likeStatus === "None") {
+                    likesCount--
+                }
+                if (updateData.likeStatus === "Dislike") {
+                    likesCount--
+                    dislikesCount++
+                }
+                break
+            case "Dislike":
+                if (updateData.likeStatus === "None") {
+                    dislikesCount--
+                }
+                if (updateData.likeStatus === "Like") {
+                    dislikesCount--
+                    likesCount++
+                }
+        }
+
+        await this.commentsRepository.updateLikesCount(updateData.commentId, likesCount, dislikesCount)
+        await this.commentsRepository.updateLikesStatus(updateData.commentId, updateData.userId, updateData.likeStatus)
+
+        return {
+            status: ResultStatus.Success,
+            data: null
+        }
+
     }
 
     async deleteComment(id: string, userId: ObjectId): Promise<Result<boolean | null>> {

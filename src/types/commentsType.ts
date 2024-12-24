@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import {postType} from "../db/dbType";
+import {likeStatus, postType} from "../db/dbType";
 
 
 export type createCommentType = {
@@ -8,7 +8,7 @@ export type createCommentType = {
     postId: string
 }
 
-export type commentType = {
+/*export type commentType = {
     _id: ObjectId
     content: string
     commentatorInfo: {
@@ -17,9 +17,24 @@ export type commentType = {
     },
     createdAt: string
     postId: string
+}*/
+
+export type outputCreateCommentData ={
+    id: ObjectId
+    content:string
+    commentatorInfo: {
+        userId: ObjectId
+        userLogin: string
+    },
+    createdAt: string,
+    likesInfo: {
+        likesCount: number,
+        dislikesCount: number,
+        myStatus:string
+    }
 }
 
-export type outputCommentType = {
+/*export type outputCommentType = {
     id: ObjectId
     content: string
     commentatorInfo: {
@@ -27,7 +42,7 @@ export type outputCommentType = {
         userLogin: string
     },
     createdAt: string
-}
+}*/
 
 export type findCommentsData = {
     pageNumber: number
@@ -35,6 +50,7 @@ export type findCommentsData = {
     sortBy: string
     sortDirection: string
     postId?: string
+    userId?:ObjectId
 }
 
 export type CommentsOutputType = {
@@ -42,7 +58,7 @@ export type CommentsOutputType = {
     page: number
     pageSize: number
     totalCount: number
-    items: outputCommentType[]
+    items: outputCreateCommentData[]
 }
 
 export type commentsQueryType = {
@@ -57,11 +73,35 @@ export type updateCommentType = {
     commentId: string
     content: string
 }
+export type updateLikeStatusType = {
+    userId: ObjectId
+    commentId: string
+    likeStatus: string
+}
 
 export class CommentatorInfo {
     constructor(
         public userId: ObjectId,
         public userLogin: string
+    ) {
+    }
+}
+
+export class UserForCommentLike {
+    constructor(
+        public userId: ObjectId,
+        public likeStatus: string
+    ) {
+    }
+
+}
+
+
+export class LikesInfo {
+    constructor(
+        public likesCount: number,
+        public dislikesCount: number,
+        public users: Array<UserForCommentLike>
     ) {
     }
 }
@@ -73,7 +113,9 @@ export class CommentsBDTypeClass {
         public content: string,
         public createdAt: string,
         public postId: string,
-        public commentatorInfo: CommentatorInfo
+        public commentatorInfo: CommentatorInfo,
+        public likesInfo: LikesInfo
     ) {
     }
 }
+

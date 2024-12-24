@@ -17,6 +17,7 @@ import {
     postsQueryRepository,
     postsService
 } from "../commposition-root";
+import {tokenParser} from "../midlewares/auth/tokenParser";
 
 
 export const postsRouter = Router({})
@@ -66,7 +67,7 @@ export class PostsController {
 
     async getCommentsForPost(req: Request<{
         postId: string
-    }, {}, {}, commentsQueryType>, res: Response<CommentsOutputType | null>) {
+    }, {}, {},commentsQueryType >, res: Response<CommentsOutputType | null>) {
         const postId = req.params.postId
         const {pageNumber, pageSize, sortBy, sortDirection} = paginationQueries(req)
         const findComments = await this.commentsQueryRepository.getAllComments({
@@ -74,7 +75,8 @@ export class PostsController {
             pageSize,
             sortBy,
             sortDirection,
-            postId
+            postId,
+           userId: req.user?._id
         })
         if (findComments.status === 1) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
@@ -133,7 +135,8 @@ const postsControllerInstance = new PostsController(postsService, postsQueryRepo
 postsRouter.get('/', postsControllerInstance.getAllPosts.bind(postsControllerInstance))
 postsRouter.get('/:id', postsControllerInstance.findPostById.bind(postsControllerInstance))
 postsRouter.post('/', authBasic, validationPosts, postsControllerInstance.createdPost.bind(postsControllerInstance))
-postsRouter.get('/:postId/comments', postsControllerInstance.getCommentsForPost.bind(postsControllerInstance))
+// @ts-ignore
+postsRouter.get('/:postId/comments',tokenParser, postsControllerInstance.getCommentsForPost.bind(postsControllerInstance))
 postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, postsControllerInstance.createCommentForPost.bind(postsControllerInstance))
 postsRouter.put('/:id', authBasic, validationPosts, postsControllerInstance.updatePost.bind(postsControllerInstance))
 postsRouter.delete('/:id', authBasic, postsControllerInstance.deletePost.bind(postsControllerInstance))

@@ -1,7 +1,9 @@
 import {commentsDBType} from "../db/dbType";
-import {CommentsOutputType, findCommentsData, outputCommentType} from "../types/commentsType";
+import {CommentsOutputType, findCommentsData, outputCreateCommentData} from "../types/commentsType";
 import {ObjectId} from "mongodb";
 import {commentsMongooseModel, postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import {commentsRepository} from "../commposition-root";
+
 
 enum ResultStatus {
     Success = 0,
@@ -45,44 +47,73 @@ export class CommentsQueryRepository {
                 page: data.pageNumber,
                 pageSize: data.pageSize,
                 totalCount: totalCount,
-                items: this._commentMapping(findComment)
+                items:await this._commentMapping(findComment, data?.userId)
             }
         }
 
 
     }
 
-    async getCommentById(id: string): Promise<outputCommentType | null> {
+    async getCommentById(id: string,userId?:ObjectId): Promise<outputCreateCommentData | null> {
         if (!this._checkObjectId(id)) return null;
         const comment = await commentsMongooseModel.findOne({_id: new ObjectId(id)}).lean()
+
+        let status
+
+        if(userId){
+            status = await commentsRepository.findUserLikeStatus(id,userId)
+        }
+
+
         if (comment) {
-            return {
-                id: comment._id,
+            return  {id: comment._id,
                 content: comment.content,
                 commentatorInfo: {
-                    userId: comment.commentatorInfo.userId,
+                userId: comment.commentatorInfo.userId,
                     userLogin: comment.commentatorInfo.userLogin
-                },
-                createdAt: comment.createdAt
-            }
+            },
+            createdAt: comment.createdAt,
+                likesInfo: {
+                likesCount: comment.likesInfo.likesCount,
+                    dislikesCount: comment.likesInfo.dislikesCount,
+                    myStatus: "None"
+            }}
         } else {
             return null
         }
 
     }
 
-    _commentMapping(array: commentsDBType[]): outputCommentType[] {
-        return array.map((comment) => {
-            return {
-                id: comment._id,
-                content: comment.content,
-                commentatorInfo: {
-                    userId: comment.commentatorInfo.userId,
-                    userLogin: comment.commentatorInfo.userLogin
-                },
-                createdAt: comment.createdAt
-            };
-        });
+    async _commentMapping(array: commentsDBType[], userId?: ObjectId): Promise<outputCreateCommentData[]> {
+        return Promise.all(
+            array.map(async (comment) => {
+                let status
+
+                if (userId) {
+                    status = await commentsRepository.findUserLikeStatus(
+                        comment._id.toString(),
+                        userId
+                    );
+                }
+
+
+                return {
+                    id: comment._id,
+                    content: comment.content,
+                    commentatorInfo: {
+                        userId: comment.commentatorInfo.userId,
+                        userLogin: comment.commentatorInfo.userLogin
+                    },
+                    createdAt: comment.createdAt,
+                    likesInfo: {
+                        likesCount: comment.likesInfo.likesCount,
+                        dislikesCount: comment.likesInfo.dislikesCount,
+                        myStatus: status || "None"
+
+                    }
+                }
+            }))
+
     }
 
     _checkObjectId(id: string): boolean {

@@ -12,6 +12,12 @@ enum availableResolutions {
     "P2160"
 }
 
+export enum likeStatus {
+    "None",
+    "Like",
+    "Dislike"
+}
+
 /*
 const availableResolutions = ["P144",
     "P240",
@@ -101,6 +107,12 @@ export type postDBType = {
     createdAt: string
 }
 
+type likeInfoCommentType = {
+    likesCount: number
+    dislikesCount: number
+    users: Array<{ userId: ObjectId, likeStatus: string }>
+}
+
 
 export type commentsDBType = {
     _id: ObjectId
@@ -110,7 +122,9 @@ export type commentsDBType = {
         userLogin: string
     }
     createdAt: string,
-    postId: string
+    postId: string,
+    likesInfo: likeInfoCommentType
+
 }
 
 export type usersDBType = {
