@@ -9,7 +9,6 @@ export const paginationQueries = (req: Request<{}, {}, {}, blogQueryBlogType>) =
     let pageNumber = req.query.pageNumber ? +req.query.pageNumber : 1
     let pageSize = req.query.pageSize ? +req.query.pageSize : 10
 
-
     return {searchNameTerm, sortBy, sortDirection, pageNumber, pageSize}
 
 }

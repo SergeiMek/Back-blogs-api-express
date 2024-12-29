@@ -21,7 +21,7 @@ type Result<T> = {
 export class CommentsQueryRepository {
     async getAllComments(data: findCommentsData): Promise<Result<CommentsOutputType | null>> {
 
-        const post = await postsMongooseModel.findOne({id: data.postId})
+        const post = await commentsMongooseModel.findOne({id: data.postId})
         if (!post) {
             return {
                 status: ResultStatus.NotFound,
@@ -36,7 +36,7 @@ export class CommentsQueryRepository {
         }
 
         const findComment = await commentsMongooseModel.find(filter).sort({[data.sortBy]: data.sortDirection === 'asc' ? 1 : -1}).skip((data.pageNumber - 1) * data.pageSize).limit(data.pageSize).lean()
-        const totalCount = await postsMongooseModel.countDocuments(filter)
+        const totalCount = await commentsMongooseModel.countDocuments(filter)
         const pageCount = Math.ceil(totalCount / data.pageSize)
 
 
