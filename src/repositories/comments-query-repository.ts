@@ -21,7 +21,7 @@ type Result<T> = {
 export class CommentsQueryRepository {
     async getAllComments(data: findCommentsData): Promise<Result<CommentsOutputType | null>> {
 
-        const post = await commentsMongooseModel.findOne({id: data.postId})
+        const post = await postsMongooseModel.findOne({id: data.postId})
         if (!post) {
             return {
                 status: ResultStatus.NotFound,
