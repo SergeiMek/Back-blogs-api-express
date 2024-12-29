@@ -58,10 +58,10 @@ export class CommentsQueryRepository {
         if (!this._checkObjectId(id)) return null;
         const comment = await commentsMongooseModel.findOne({_id: new ObjectId(id)}).lean()
 
-        let status
+        let status = "None"
 
         if(userId){
-            status = await commentsRepository.findUserLikeStatus(id,userId)
+            status = await commentsRepository.findUserLikeStatus(id,userId) as string
         }
 
 
@@ -76,7 +76,7 @@ export class CommentsQueryRepository {
                 likesInfo: {
                 likesCount: comment.likesInfo.likesCount,
                     dislikesCount: comment.likesInfo.dislikesCount,
-                    myStatus: "None"
+                    myStatus: status
             }}
         } else {
             return null

@@ -131,8 +131,7 @@ export class CommentsService {
         let dislikesCount = foundComments.likesInfo.dislikesCount
 
         const foundUser = await this.commentsRepository.findUserInLikeInfo(updateData.commentId, updateData.userId)
-
-        if (!foundComments) {
+        if (!foundUser) {
             await this.commentsRepository.pushUserInLikesInfo(updateData.commentId, updateData.userId, updateData.likeStatus)
 
             if (updateData.likeStatus === "Like") {
@@ -150,7 +149,6 @@ export class CommentsService {
         }
 
         const userLikeStatus = await this.commentsRepository.findUserLikeStatus(updateData.commentId, updateData.userId)
-
 
         switch (userLikeStatus) {
             case "None":
@@ -182,7 +180,6 @@ export class CommentsService {
 
         await this.commentsRepository.updateLikesCount(updateData.commentId, likesCount, dislikesCount)
         await this.commentsRepository.updateLikesStatus(updateData.commentId, updateData.userId, updateData.likeStatus)
-
         return {
             status: ResultStatus.Success,
             data: null

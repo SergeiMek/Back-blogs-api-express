@@ -40,8 +40,7 @@ export class CommentsRepository {
                     },
                 },
             }
-        );
-
+        ).lean();
         if (!foundUser || foundUser.likesInfo.users.length === 0) {
             return null;
         }
@@ -75,7 +74,7 @@ export class CommentsRepository {
 
     async updateLikesStatus(commentId: string, userId: ObjectId, likeStatus: string): Promise<boolean> {
         const result = await commentsMongooseModel.updateOne(
-            {_id: commentId,"likesInfo.users.userId":userId},
+            {_id: commentId, "likesInfo.users.userId": userId},
             {
                 $set: {
                     "likesInfo.users.$.likeStatus": likeStatus,

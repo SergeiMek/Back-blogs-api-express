@@ -27,7 +27,7 @@ export class CommentsController {
 
     async getCommentById(req: Request<{ id: string }>, res: Response<outputCreateCommentData>) {
         const userId = req.user?._id
-        const comment = await this.commentsQueryRepository.getCommentById(req.params.id,userId)
+        const comment = await this.commentsQueryRepository.getCommentById(req.params.id, userId)
 
         if (comment) {
             res.status(HTTP_STATUSES.OK_200).json(comment)
@@ -59,10 +59,11 @@ export class CommentsController {
             res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
         }
     }
+
     async updateLikeStatus(req: Request<{
         commentId: string
     }, {}, { likeStatus: string }>, res: Response) {
-
+        debugger
         const likeStatusData = {
             commentId: req.params.commentId,
             userId: req.user!._id,
@@ -70,7 +71,7 @@ export class CommentsController {
         }
 
         const isUpdatedStatus = await this.commentsService.updateLikeStatus(likeStatusData)
-
+debugger
 
         if (isUpdatedStatus.status === 2) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
@@ -104,7 +105,7 @@ export class CommentsController {
 const commentsControllerInstance = new CommentsController(commentsQueryRepository, commentsService)
 
 
-commentsRouter.get('/:id',tokenParser, commentsControllerInstance.getCommentById.bind(commentsControllerInstance))
+commentsRouter.get('/:id', tokenParser, commentsControllerInstance.getCommentById.bind(commentsControllerInstance))
 commentsRouter.put('/:commentId', authMiddleware, validationCommentsInputPost, commentsControllerInstance.updateComment.bind(commentsControllerInstance))
 commentsRouter.put('/:commentId/like-status', authMiddleware, validationUpdateLikeStatus, commentsControllerInstance.updateLikeStatus.bind(commentsControllerInstance))
 commentsRouter.delete('/:commentId', authMiddleware, commentsControllerInstance.deleteComment.bind(commentsControllerInstance))
