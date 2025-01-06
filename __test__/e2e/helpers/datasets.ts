@@ -170,7 +170,7 @@ type dataCreateCommentData = {
 
 }
 
-export async function createComment(data: dataCreateCommentData) {
+/*export async function createComment(data: dataCreateCommentData) {
     const datasetBlog = {
         id: String(+(new Date())),
         name: 'n1',
@@ -202,6 +202,54 @@ export async function createComment(data: dataCreateCommentData) {
         },
         createdAt: new Date().toISOString(),
         postId: posts[0].id
+    }
+    await commentsMongooseModel.create(comment)
+    return {
+        commentId: comment._id,
+        userLogin: user.accountData.login,
+        userPassword: data.passwordUser,
+        userEmail: user.accountData.email,
+        postId: posts[0].id
+    }
+}*/
+
+export async function createComment(data: dataCreateCommentData) {
+    const datasetBlog = {
+        id: String(+(new Date())),
+        name: 'n1',
+        description: 'd1',
+        websiteUrl: 'https://some.com',
+        isMembership: false,
+        createdAt: new Date().toISOString()
+    }
+
+    const posts = [...new Array(1)].map((_, index) => ({
+        id: String(+(new Date())),
+        title: 't1',
+        content: 'c1',
+        shortDescription: 's1',
+        blogId: datasetBlog.id,
+        blogName: 'n1',
+        createdAt: new Date().toISOString()
+    }))
+    const user = await createOneUser(data.emailUser, data.loginUser, data.passwordUser)
+    await blogsMongooseModel.create(datasetBlog)
+    await postsMongooseModel.insertMany(posts)
+    await usersMongooseModel.create(user)
+    const comment = {
+        _id: new ObjectId,
+        content: data.content,
+        commentatorInfo: {
+            userId: user._id,
+            userLogin: user.accountData.login
+        },
+        createdAt: new Date().toISOString(),
+        postId: posts[0].id,
+        likesInfo: {
+            likesCount: 0,
+            dislikesCount: 0,
+            users: []
+        }
     }
     await commentsMongooseModel.create(comment)
     return {

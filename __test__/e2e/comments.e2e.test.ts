@@ -8,7 +8,7 @@ import {
     postsMongooseModel,
     usersMongooseModel
 } from "../../src/db/mongooseSchema/mongooseSchema";
-
+import {getRawAsset} from "node:sea";
 
 
 describe('/comments', () => {
@@ -60,6 +60,28 @@ describe('/comments', () => {
             .get(SETTINGS.PATH.COMMENTS + '/' + '22222')
             .expect(404)
     })
+    it('get  comment by id , 200', async () => {
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
+
+
+        const creteCommentData = await createComment(createData)
+
+        const findComment = await req
+            .get(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
+            .expect(200)
+
+
+        expect(findComment.body.content).toEqual('2222222222222222222222')
+        expect(findComment.body.likesInfo.likesCount).toEqual(0)
+        expect(findComment.body.likesInfo.dislikesCount).toEqual(0)
+        expect(findComment.body.likesInfo.myStatus).toEqual('None')
+
+    })
     it('delete comment, OK 204', async () => {
 
         const createData = {
@@ -89,23 +111,23 @@ describe('/comments', () => {
         expect(allCommentsDel.length).toEqual(0)
 
     })
-        it('delete comment, Unauthorized 401', async () => {
+    it('delete comment, Unauthorized 401', async () => {
 
-            const createData = {
-                content: '2222222222222222222222',
-                emailUser: 'test@mail.ru',
-                loginUser: 'test',
-                passwordUser: '1234567'
-            }
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
 
-            const creteCommentData = await createComment(createData)
+        const creteCommentData = await createComment(createData)
 
 
-            const deleteComment = await req
-                .delete(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
-                .set('Authorization', `Bearer 5555555`)
-                .expect(401)
-        })
+        const deleteComment = await req
+            .delete(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
+            .set('Authorization', `Bearer 5555555`)
+            .expect(401)
+    })
     it('delete comment, if try delete the comment that is not your own 403', async () => {
 
         const createData1 = {
@@ -160,139 +182,244 @@ describe('/comments', () => {
             .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
             .expect(404)
     })
-        it('update comment , no content 204', async () => {
+    it('update comment , no content 204', async () => {
 
-            const createData = {
-                content: '2222222222222222222222',
-                emailUser: 'test@mail.ru',
-                loginUser: 'test',
-                passwordUser: '1234567'
-            }
-
-
-            const creteCommentData = await createComment(createData)
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
 
 
-            const loginUser = await req
-                .post(SETTINGS.PATH.AUTH + '/login')
-                .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
-                .expect(200);
+        const creteCommentData = await createComment(createData)
 
 
-            await req
-                .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
-                .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
-                .send({content: '5555555555555552222222222'})
-                .expect(204)
-
-            const updateComment = await commentsMongooseModel.find().lean()
-            expect(updateComment[0].content).toEqual('5555555555555552222222222')
-
-        })
-        it('update comment ,if the inputModel has incorrect values 400', async () => {
-
-            const createData = {
-                content: '2222222222222222222222',
-                emailUser: 'test@mail.ru',
-                loginUser: 'test',
-                passwordUser: '1234567'
-            }
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
+            .expect(200);
 
 
-            const creteCommentData = await createComment(createData)
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({content: '5555555555555552222222222'})
+            .expect(204)
 
-            const loginUser = await req
-                .post(SETTINGS.PATH.AUTH + '/login')
-                .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
-                .expect(200);
+        const updateComment = await commentsMongooseModel.find().lean()
+        expect(updateComment[0].content).toEqual('5555555555555552222222222')
 
+    })
+    it('update comment ,if the inputModel has incorrect values 400', async () => {
 
-            await req
-                .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
-                .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
-                .send({content: '555555555555555'})
-                .expect(400)
-        })
-        it('update comment ,unauthorized 401', async () => {
-
-            const createData = {
-                content: '2222222222222222222222',
-                emailUser: 'test@mail.ru',
-                loginUser: 'test',
-                passwordUser: '1234567'
-            }
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
 
 
-            const creteCommentData = await createComment(createData)
+        const creteCommentData = await createComment(createData)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
+            .expect(200);
 
 
-            await req
-                .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
-                .set('Authorization', `Bearer lkkkk`)
-                .send({content: '5555555555555556666666666666666'})
-                .expect(401)
-        })
-        it('update comment ,if try edit the comment that is not you own 403', async () => {
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({content: '555555555555555'})
+            .expect(400)
+    })
+    it('update comment ,unauthorized 401', async () => {
 
-            const createData1 = {
-                content: '2222222222222222222222',
-                emailUser: 'test1@mail.ru',
-                loginUser: 'test1',
-                passwordUser: '1234567'
-            }
-
-            const createData2 = {
-                content: '2222222222222222222222',
-                emailUser: 'test2@mail.ru',
-                loginUser: 'test2',
-                passwordUser: '1234567'
-            }
-
-            const creteCommentData1 = await createComment(createData1)
-            const creteCommentData2 = await createComment(createData2)
-
-            const loginUser1 = await req
-                .post(SETTINGS.PATH.AUTH + '/login')
-                .send({loginOrEmail: creteCommentData1.userLogin, password: creteCommentData1.userPassword})
-                .expect(200);
-
-            const loginUser2 = await req
-                .post(SETTINGS.PATH.AUTH + '/login')
-                .send({loginOrEmail: creteCommentData2.userLogin, password: creteCommentData2.userPassword})
-                .expect(200);
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
 
 
-            await req
-                .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData1.commentId)
-                .set('Authorization', `Bearer ${loginUser2.body.accessToken}`)
-                .send({content: '55555555555555511111111111111111111111111111'})
-                .expect(403)
-        })
-        it('update comment ,not found 404', async () => {
-
-            const createData = {
-                content: '2222222222222222222222',
-                emailUser: 'test@mail.ru',
-                loginUser: 'test',
-                passwordUser: '1234567'
-            }
+        const creteCommentData = await createComment(createData)
 
 
-            const creteCommentData = await createComment(createData)
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId)
+            .set('Authorization', `Bearer lkkkk`)
+            .send({content: '5555555555555556666666666666666'})
+            .expect(401)
+    })
+    it('update comment ,if try edit the comment that is not you own 403', async () => {
 
-            const loginUser = await req
-                .post(SETTINGS.PATH.AUTH + '/login')
-                .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
-                .expect(200);
+        const createData1 = {
+            content: '2222222222222222222222',
+            emailUser: 'test1@mail.ru',
+            loginUser: 'test1',
+            passwordUser: '1234567'
+        }
+
+        const createData2 = {
+            content: '2222222222222222222222',
+            emailUser: 'test2@mail.ru',
+            loginUser: 'test2',
+            passwordUser: '1234567'
+        }
+
+        const creteCommentData1 = await createComment(createData1)
+        const creteCommentData2 = await createComment(createData2)
+
+        const loginUser1 = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData1.userLogin, password: creteCommentData1.userPassword})
+            .expect(200);
+
+        const loginUser2 = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData2.userLogin, password: creteCommentData2.userPassword})
+            .expect(200);
 
 
-            await req
-                .put(SETTINGS.PATH.COMMENTS + '/1234')
-                .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
-                .send({content: '5555555555555556666666666666666'})
-                .expect(404)
-        })
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData1.commentId)
+            .set('Authorization', `Bearer ${loginUser2.body.accessToken}`)
+            .send({content: '55555555555555511111111111111111111111111111'})
+            .expect(403)
+    })
+    it('update comment ,not found 404', async () => {
 
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
+
+
+        const creteCommentData = await createComment(createData)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
+            .expect(200);
+
+
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/1234')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({content: '5555555555555556666666666666666'})
+            .expect(404)
+    })
+
+    it('update comment like status ,204', async () => {
+
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
+
+
+        const creteCommentData = await createComment(createData)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
+            .expect(200);
+
+
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId + '/like-status')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({likeStatus: 'Like'})
+            .expect(204)
+
+        const updateComment = await commentsMongooseModel.find().lean()
+
+        expect(updateComment[0].likesInfo.users.length).toEqual(1)
+        expect(updateComment[0].likesInfo.likesCount).toEqual(1)
+        expect(updateComment[0].likesInfo.dislikesCount).toEqual(0)
+        expect(updateComment[0].likesInfo.users[0].likeStatus).toEqual('Like')
+    })
+
+    it('update comment like status unauthorized ,401', async () => {
+
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
+
+
+        const creteCommentData = await createComment(createData)
+
+
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId + '/like-status')
+            .set('Authorization', `Bearer 12345`)
+            .send({likeStatus: 'Like'})
+            .expect(401)
+
+
+    })
+
+    it('update comment like status incorrect values ,400', async () => {
+
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
+
+
+        const creteCommentData = await createComment(createData)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
+            .expect(200);
+
+
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + creteCommentData.commentId + '/like-status')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({likeStatus: 'Lie'})
+            .expect(400)
+
+    })
+
+    it('update comment like status if comment with specified id doesnt exists ,404', async () => {
+
+        const createData = {
+            content: '2222222222222222222222',
+            emailUser: 'test@mail.ru',
+            loginUser: 'test',
+            passwordUser: '1234567'
+        }
+
+
+        const creteCommentData = await createComment(createData)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: creteCommentData.userLogin, password: creteCommentData.userPassword})
+            .expect(200);
+
+
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + '5555555' + '/like-status')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({likeStatus: 'Like'})
+            .expect(404)
+
+    })
 
 })
 
