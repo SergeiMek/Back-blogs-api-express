@@ -5,7 +5,10 @@ import {OutputPostsType, postsInoutData} from "../types/postType";
 import {validationPosts} from "../midlewares/validations/input/validation-posts-input";
 import {paginationQueries} from "../helpers/paginations_values";
 import {blogQueryBlogType} from "../types/blogType";
-import {validationCommentsInputPost} from "../midlewares/validations/input/validation-comments-input";
+import {
+    validationCommentsInputPost,
+    validationUpdateLikeStatus
+} from "../midlewares/validations/input/validation-comments-input";
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
 import {CommentsOutputType, commentsQueryType} from "../types/commentsType";
 import {PostsService} from "../domain/posts-service";
@@ -18,6 +21,7 @@ import {
     postsService
 } from "../commposition-root";
 import {tokenParser} from "../midlewares/auth/tokenParser";
+import {outputPostType} from "../db/dbType";
 
 
 export const postsRouter = Router({})
@@ -37,18 +41,21 @@ export class PostsController {
     async getAllPosts(req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputPostsType>) {
         const {sortBy, sortDirection, pageNumber, pageSize} = paginationQueries(req)
 
+        const userId = req.user?._id
 
         res.status(HTTP_STATUSES.OK_200).json(await this.postsQueryRepository.getAllPosts({
             sortBy,
             sortDirection,
             pageNumber,
-            pageSize
+            pageSize,
+            userId
         }))
     }
 
-    async findPostById(req: Request<{ id: string }>, res: Response<OutputPostsType>) {
+    async findPostById(req: Request<{ id: string }>, res: Response<outputPostType | null>) {
 
-        const post = await this.postsQueryRepository.findPostById(req.params.id)
+        const userId = req.user?._id
+        const post = await this.postsQueryRepository.findPostById(req.params.id, userId)
 
         if (post) {
             res.status(HTTP_STATUSES.OK_200).json(post)
@@ -57,7 +64,7 @@ export class PostsController {
         }
     }
 
-    async createdPost(req: Request<{}, {}, postsInoutData>, res: Response<OutputPostsType>) {
+    async createdPost(req: Request<{}, {}, postsInoutData>, res: Response<outputPostType>) {
 
 
         const createdPost = await this.postsService.createdPost(req.body)
@@ -67,7 +74,7 @@ export class PostsController {
 
     async getCommentsForPost(req: Request<{
         postId: string
-    }, {}, {},commentsQueryType >, res: Response<CommentsOutputType | null>) {
+    }, {}, {}, commentsQueryType>, res: Response<CommentsOutputType | null>) {
         const postId = req.params.postId
         const {pageNumber, pageSize, sortBy, sortDirection} = paginationQueries(req)
         const findComments = await this.commentsQueryRepository.getAllComments({
@@ -76,7 +83,7 @@ export class PostsController {
             sortBy,
             sortDirection,
             postId,
-           userId: req.user?._id
+            userId: req.user?._id
         })
         if (findComments.status === 1) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
@@ -84,6 +91,28 @@ export class PostsController {
         if (findComments.status === 0) {
             res.status(HTTP_STATUSES.OK_200).send(findComments.data)
         }
+    }
+
+    async updateLikeStatus(req: Request<{
+        postId: string
+    }, {}, { likeStatus: string }>, res: Response<CommentsOutputType | null>) {
+
+        const likeStatusData = {
+            postId: req.params.postId,
+            userId: req.user!._id,
+            likeStatus: req.body.likeStatus
+        }
+
+        const isUpdatedStatus = await postsService.updateLikesStatus(likeStatusData)
+
+        if (isUpdatedStatus.status === 2) {
+            res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
+        }
+        if (isUpdatedStatus.status === 0) {
+            res.sendStatus(HTTP_STATUSES.NO_CONTEND_204)
+        }
+
+
     }
 
     async createCommentForPost(req: Request<{
@@ -132,13 +161,15 @@ export class PostsController {
 const postsControllerInstance = new PostsController(postsService, postsQueryRepository, commentsQueryRepository, commentsService)
 
 
-postsRouter.get('/', postsControllerInstance.getAllPosts.bind(postsControllerInstance))
-postsRouter.get('/:id', postsControllerInstance.findPostById.bind(postsControllerInstance))
+// @ts-ignore
+postsRouter.get('/', tokenParser, postsControllerInstance.getAllPosts.bind(postsControllerInstance))
+postsRouter.get('/:id', tokenParser, postsControllerInstance.findPostById.bind(postsControllerInstance))
 postsRouter.post('/', authBasic, validationPosts, postsControllerInstance.createdPost.bind(postsControllerInstance))
 // @ts-ignore
-postsRouter.get('/:postId/comments', tokenParser,postsControllerInstance.getCommentsForPost.bind(postsControllerInstance))
+postsRouter.get('/:postId/comments', tokenParser, postsControllerInstance.getCommentsForPost.bind(postsControllerInstance))
 postsRouter.post('/:postId/comments', authMiddleware, validationCommentsInputPost, postsControllerInstance.createCommentForPost.bind(postsControllerInstance))
 postsRouter.put('/:id', authBasic, validationPosts, postsControllerInstance.updatePost.bind(postsControllerInstance))
+postsRouter.put('/:postId/like-status', authMiddleware, validationUpdateLikeStatus, postsControllerInstance.updateLikeStatus.bind(postsControllerInstance))
 postsRouter.delete('/:id', authBasic, postsControllerInstance.deletePost.bind(postsControllerInstance))
 
 

@@ -1,5 +1,6 @@
 import {OutputErrorsType} from "./videosType";
-import {blogsType, postType} from "../db/dbType";
+import {blogsType, outputPostType, postType} from "../db/dbType";
+import {ObjectId} from "mongodb";
 
 
 export type postsInoutData = {
@@ -9,13 +10,28 @@ export type postsInoutData = {
     blogId: string
 }
 
+export type pushUserInLikeType = {
+    postId:string
+    addedAt: string
+    userId: ObjectId
+    userLogin: string
+    likeStatus: string
+}
+
+
+export type updateLikesDataType = {
+    postId: string
+    userId: ObjectId
+    likeStatus: string
+}
 
 export type findPostData = {
-    pageNumber:number
-    pageSize:number
-    sortBy:string
-    sortDirection:string
-    blogId?:string
+    pageNumber: number
+    pageSize: number
+    sortBy: string
+    sortDirection: string
+    blogId?: string
+    userId?: ObjectId
 }
 
 export type postOutputType = {
@@ -23,10 +39,37 @@ export type postOutputType = {
     page: number
     pageSize: number
     totalCount: number
-    items: postType[]
+    items: outputPostType[]
 }
 
+export class ExtendedUserLikes {
+    constructor(
+        public addedAt: string,
+        public userId: string,
+        public userLogin: string,
+        public likeStatus: string
+    ) {
+    }
+}
 
+export class PostDBModel {
+    constructor(
+        public _id: ObjectId,
+        public id: string,
+        public title: string,
+        public shortDescription: string,
+        public content: string,
+        public blogId: string,
+        public blogName: string,
+        public createdAt: string,
+        public likesInfo: {
+            likesCount: number,
+            dislikesCount: number,
+            users: ExtendedUserLikes[]
+        }
+    ) {
+    }
+}
 
 type OutputPostsTypeArray = Array<postType>
 

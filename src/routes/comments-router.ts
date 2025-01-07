@@ -63,15 +63,12 @@ export class CommentsController {
     async updateLikeStatus(req: Request<{
         commentId: string
     }, {}, { likeStatus: string }>, res: Response) {
-        debugger
         const likeStatusData = {
             commentId: req.params.commentId,
             userId: req.user!._id,
             likeStatus: req.body.likeStatus
         }
-
         const isUpdatedStatus = await this.commentsService.updateLikeStatus(likeStatusData)
-debugger
 
         if (isUpdatedStatus.status === 2) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)

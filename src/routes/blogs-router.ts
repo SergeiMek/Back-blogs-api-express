@@ -16,6 +16,7 @@ import {
     postsQueryRepository,
     postsService
 } from "../commposition-root";
+import {outputPostType} from "../db/dbType";
 
 
 export const blogsRouter = Router({})
@@ -77,7 +78,7 @@ export class BlogsController {
 
     async createdPostForBlog(req: Request<{
         blogId: string
-    }, {}, blogInputPostData>, res: Response<OutputPostsType>) {
+    }, {}, blogInputPostData>, res: Response<outputPostType>) {
 
         const createdPost = await this.postsService.createdPost({...req.body, blogId: req.params.blogId})
 

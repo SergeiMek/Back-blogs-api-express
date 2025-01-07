@@ -39,7 +39,7 @@ export const securityQueryRepository = new SecurityQueryRepository()
  export const usersService = new UsersService(usersRepository)
 export const devicesService = new DevicesService(devicesRepository)
 export const authService = new AuthService(usersRepository)
-export const postsService = new PostsService(postsRepository, blogsRepository)
+export const postsService = new PostsService(postsRepository, blogsRepository,usersRepository)
 export const blogsService = new BlogsService(blogsRepository)
 export const commentsService = new CommentsService(usersRepository, postsRepository, commentsRepository)
 

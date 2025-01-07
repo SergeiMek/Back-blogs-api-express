@@ -1,6 +1,8 @@
 import {findPostData, postOutputType} from "../types/postType";
-import {postDBType, postType} from "../db/dbType";
+import {outputPostType, postDBType, postType} from "../db/dbType";
 import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import {ObjectId} from "mongodb";
+import {postsRepository} from "../commposition-root";
 
 
 export class PostsQueryRepository {
@@ -20,42 +22,82 @@ export class PostsQueryRepository {
             page: data.pageNumber,
             pageSize: data.pageSize,
             totalCount: totalCount,
-            items: this._postMapping(findPosts)
+            items: await this.postMapping(findPosts, data.userId)
         }
 
 
     }
 
-    async findPostById(id: string): Promise<postType | null> {
+    async findPostById(id: string, userId?: ObjectId): Promise<outputPostType | null> {
         const post = await postsMongooseModel.findOne({id: id})
-
-        if (post) {
-            return {
-                id: post.id,
-                title: post.title,
-                shortDescription: post.shortDescription,
-                content: post.content,
-                blogId: post.blogId,
-                blogName: post.blogName,
-                createdAt: post.createdAt
-            }
-        } else {
+        if (!post) {
             return null
         }
+        let status
+        if (userId) {
+            status = await postsRepository.findUserLikeStatus(id, userId)
+        }
+        const likesArray = post.likesInfo.users.filter((p) => p.likeStatus === "Like")
+            .sort((a, b) => -a.addedAt.localeCompare(b.addedAt))
+            .map((p) => {
+                return {
+                    addedAt: p.addedAt,
+                    userId: p.userId,
+                    login: p.userLogin
+                }
+            }).splice(0, 3)
+
+        return {
+            id: post.id,
+            title: post.title,
+            shortDescription: post.shortDescription,
+            content: post.content,
+            blogId: post.blogId,
+            blogName: post.blogName,
+            createdAt: post.createdAt,
+            extendedLikesInfo: {
+                likesCount: post.likesInfo.likesCount,
+                dislikesCount: post.likesInfo.dislikesCount,
+                myStatus: status || "None",
+                newestLikes: likesArray
+            }
+        }
     }
 
-    _postMapping(array: postDBType[]): postType[] {
-        return array.map((post) => {
-            return {
-                id: post.id,
-                title: post.title,
-                shortDescription: post.shortDescription,
-                content: post.content,
-                blogId: post.blogId,
-                blogName: post.blogName,
-                createdAt: post.createdAt
-            };
-        });
+    private async postMapping(array: postDBType[], userId?: ObjectId): Promise<outputPostType[]> {
+        return Promise.all(
+            array.map(async (p) => {
+                let status
+
+                if (userId) {
+                    status = await postsRepository.findUserLikeStatus(p.id, userId)
+                }
+                const likesArray = p.likesInfo.users.filter((p) => p.likeStatus === "Like")
+                    .sort((a, b) => -a.addedAt.localeCompare(b.addedAt))
+                    .map((p) => {
+                        return {
+                            addedAt: p.addedAt,
+                            userId: p.userId,
+                            login: p.userLogin
+                        }
+                    }).splice(0, 3)
+                return {
+                    id: p.id,
+                    title: p.title,
+                    shortDescription: p.shortDescription,
+                    content: p.content,
+                    blogId: p.blogId,
+                    blogName: p.blogName,
+                    createdAt: p.createdAt,
+                    extendedLikesInfo: {
+                        likesCount: p.likesInfo.likesCount,
+                        dislikesCount: p.likesInfo.dislikesCount,
+                        myStatus: status || "None",
+                        newestLikes: likesArray
+                    }
+                }
+            })
+        )
     }
 }
 

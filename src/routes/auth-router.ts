@@ -13,7 +13,12 @@ import {OutputErrorsType} from "../types/videosType";
 import {ObjectId} from "mongodb";
 import {validationRefreshToken} from "../midlewares/validations/input/validation-refresh-token";
 import {rateLimiter} from "../midlewares/rate-limiter";
-import {commentsMongooseModel, devicesMongooseModel, usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import {
+    commentsMongooseModel,
+    devicesMongooseModel,
+    postsMongooseModel,
+    usersMongooseModel
+} from "../db/mongooseSchema/mongooseSchema";
 import {UsersRepository} from "../repositories/users-repository";
 import {UsersService} from "../domain/users-service";
 import {DevicesService} from "../domain/devices-service";
@@ -306,6 +311,10 @@ authRouter.post('/get-users', async (req: Request<{}, {}, { num: string }>, res:
     }
     if (req.body.num === "4") {
         const comments = await commentsMongooseModel.find().lean()
+        res.status(200).send(comments)
+    }
+    if (req.body.num === "5") {
+        const comments = await postsMongooseModel.find().lean()
         res.status(200).send(comments)
     }
     return

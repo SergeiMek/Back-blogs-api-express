@@ -85,6 +85,31 @@ export type blogsDBType = {
     createdAt: string
     isMembership: boolean
 }
+type likInfoUsers = {
+    addedAt: string
+    userId: string
+    userLogin: string
+    likeStatus: string
+}
+type newestLikes = {
+    addedAt: string
+    userId: string
+    login: string
+}
+
+type likeInfoPostType = {
+    likesCount: number,
+    dislikesCount: number,
+    users: Array<likInfoUsers>
+
+}
+type outputLikeInfoPostType = {
+    likesCount: number,
+    dislikesCount: number,
+    myStatus: string,
+    newestLikes: Array<newestLikes>
+
+}
 
 export type postType = {
     id: string
@@ -94,6 +119,17 @@ export type postType = {
     blogId: string
     blogName: string
     createdAt: string
+    likesInfo: likeInfoPostType
+}
+export type outputPostType = {
+    id: string
+    title: string
+    shortDescription: string
+    content: string
+    blogId: string
+    blogName: string
+    createdAt: string
+    extendedLikesInfo: outputLikeInfoPostType
 }
 
 export type postDBType = {
@@ -105,6 +141,7 @@ export type postDBType = {
     blogId: string
     blogName: string
     createdAt: string
+    likesInfo: likeInfoPostType
 }
 
 type likeInfoCommentType = {

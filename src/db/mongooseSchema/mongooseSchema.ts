@@ -31,7 +31,19 @@ const postsSchema = new mongoose.Schema<WithId<postType>>({
     content: {type: String, required: true},
     blogId: {type: String, required: true},
     blogName: {type: String, required: true},
-    createdAt: {type: String, required: true}
+    createdAt: {type: String, required: true},
+    likesInfo:{
+        likesCount: {type: Number, required: true},
+        dislikesCount:{type: Number, required: true},
+        users:[
+            {
+                addedAt:String,
+                userId:String,
+                userLogin:String,
+                likeStatus:String
+            }
+        ]
+    }
 }, {versionKey: false})
 
 const blogsSchema = new mongoose.Schema<WithId<blogsType>>({
