@@ -17,6 +17,7 @@ import {
     postsService
 } from "../commposition-root";
 import {outputPostType} from "../db/dbType";
+import {tokenParser} from "../midlewares/auth/tokenParser";
 
 
 export const blogsRouter = Router({})
@@ -26,11 +27,12 @@ export class BlogsController {
 
 
     constructor(
-       protected blogsQueryRepository: BlogQueryRepository,
-       protected postsService: PostsService,
-       protected postsQueryRepository: PostsQueryRepository,
-       protected blogsService: BlogsService
-    ) {}
+        protected blogsQueryRepository: BlogQueryRepository,
+        protected postsService: PostsService,
+        protected postsQueryRepository: PostsQueryRepository,
+        protected blogsService: BlogsService
+    ) {
+    }
 
     async getAllBlogs(req: Request<{}, {}, {}, blogQueryBlogType>, res: Response<OutputBlogsType>) {
 
@@ -58,7 +60,8 @@ export class BlogsController {
             sortDirection,
             pageNumber,
             pageSize,
-            blogId
+            blogId,
+            userId: req.user?._id
         }))
     }
 
@@ -111,12 +114,12 @@ export class BlogsController {
 }
 
 
-
 const blogsControllerInstance = new BlogsController(blogsQueryRepository, postsService, postsQueryRepository, blogsService)
 
 
 blogsRouter.get('/', blogsControllerInstance.getAllBlogs.bind(blogsControllerInstance))
-blogsRouter.get('/:blogId/posts', blogsControllerInstance.getPostsToTheBlog.bind(blogsControllerInstance))
+// @ts-ignore
+blogsRouter.get('/:blogId/posts', tokenParser, blogsControllerInstance.getPostsToTheBlog.bind(blogsControllerInstance))
 blogsRouter.get('/:id', blogsControllerInstance.findBlogById.bind(blogsControllerInstance))
 blogsRouter.post('/', authBasic, validationBlogsInput, blogsControllerInstance.createBlog.bind(blogsControllerInstance))
 blogsRouter.post('/:blogId/posts', authBasic, validationBlogInPost, blogsControllerInstance.createdPostForBlog.bind(blogsControllerInstance))
