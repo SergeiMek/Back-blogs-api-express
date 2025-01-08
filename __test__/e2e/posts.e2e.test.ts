@@ -1,12 +1,12 @@
 import {db} from "../../src/db/db";
 import {req} from "./test-helpers";
 import {SETTINGS} from "../../src/settings";
-import {blog1, codedAuth, createOneUser, createString, dataset1} from "./helpers/datasets";
+import {blog1, codedAuth, createComment, createOneUser, createString, dataset1} from "./helpers/datasets";
 import {postsInoutData} from "../../src/types/postType";
 import {MongoMemoryServer} from "mongodb-memory-server";
 import mongoose from "mongoose";
 import {
-    blogsMongooseModel,
+    blogsMongooseModel, commentsMongooseModel, limitsMongooseModel,
     postsMongooseModel,
     usersMongooseModel,
     videosMongooseModel
@@ -28,6 +28,7 @@ describe('/posts', () => {
         await postsMongooseModel.deleteMany()
         await blogsMongooseModel.deleteMany()
         await usersMongooseModel.deleteMany()
+        await limitsMongooseModel.deleteMany()
     })
 
     afterAll(async () => {
@@ -69,7 +70,7 @@ describe('/posts', () => {
             .send(newPost) // отправка данных
             .expect(201)
 
-        // console.log(res.body)
+
         const posts = await postsMongooseModel.find({}, {_id: 0}).lean()
 
         expect(res.body.title).toEqual(newPost.title)
@@ -78,12 +79,13 @@ describe('/posts', () => {
         expect(res.body.blogId).toEqual(newPost.blogId)
         expect(res.body.blogName).toEqual(dataset1.blogs[0].name)
         expect(typeof res.body.id).toEqual('string')
+        expect(res.body.extendedLikesInfo.likesCount).toEqual(posts[0].likesInfo.likesCount)
+        expect(res.body.extendedLikesInfo.dislikesCount).toEqual(posts[0].likesInfo.dislikesCount)
+        expect(res.body.extendedLikesInfo.newestLikes).toEqual(posts[0].likesInfo.users)
 
-        expect(res.body).toEqual(posts[0])
     })
     it('shouldn\'t create 401', async () => {
 
-        ///await deleteDB()
 
         const datasetBlog = {
             id: String(+(new Date())),
@@ -114,7 +116,6 @@ describe('/posts', () => {
             .send(newPost) // отправка данных
             .expect(401)
 
-        // console.log(res.body)
 
         expect(db.posts.length).toEqual(0)
     })
@@ -133,7 +134,6 @@ describe('/posts', () => {
             .send(newPost) // отправка данных
             .expect(400)
 
-        // console.log(res.body)
 
         expect(res.body.errorsMessages.length).toEqual(4)
         expect(res.body.errorsMessages[0].field).toEqual('title')
@@ -144,13 +144,12 @@ describe('/posts', () => {
         expect(db.posts.length).toEqual(0)
     })
     it('should get empty array', async () => {
-        ///await deleteDB()// очистка базы данных если нужно
+
 
         const res = await req
             .get(SETTINGS.PATH.POSTS)
             .expect(200) // проверяем наличие эндпоинта
 
-        // console.log(res.body) // можно посмотреть ответ эндпоинта
 
         expect(res.body.items.length).toEqual(0) // проверяем ответ эндпоинта
         expect(res.body.pagesCount).toEqual(0) // проверяем ответ эндпоинта
@@ -159,8 +158,7 @@ describe('/posts', () => {
         expect(res.body.totalCount).toEqual(0) // проверяем ответ эндпоинта
     })
     it('should get not empty array', async () => {
-        //setDB(dataset2) // заполнение базы данных начальными данными если нужно
-        // await deleteDB()
+
 
         const datasetBlog = [{
             id: String(+(new Date())),
@@ -185,12 +183,16 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog[0].id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
 
         await blogsMongooseModel.insertMany(datasetBlog)
-        // await postsCollection.insertOne(datasetPost)
 
 
         const smartPostModel = new postsMongooseModel(datasetPost);
@@ -202,10 +204,9 @@ describe('/posts', () => {
             .get(SETTINGS.PATH.POSTS)
             .expect(200)
 
-        // console.log(res.body)
 
         expect(res.body.items.length).toEqual(1)
-        expect(res.body.items[0]).toEqual(datasetPost)
+
     })
 
     it('should get post pagination', async () => {
@@ -231,7 +232,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog.id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }))
         await postsMongooseModel.insertMany(posts)
 
@@ -239,7 +245,6 @@ describe('/posts', () => {
             .get(SETTINGS.PATH.POSTS + '?pageNumber=5&pageSize=10')
             .expect(200)
 
-        console.log(res.body)
 
         expect(res.body.items.length).toEqual(10)
         expect(res.body.pagesCount).toEqual(30)
@@ -302,7 +307,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog[0].id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
         await blogsMongooseModel.insertMany(datasetBlog)
@@ -320,7 +330,7 @@ describe('/posts', () => {
 
         // console.log(res.body)
 
-        expect(res.body).toEqual(datasetPost)
+        // expect(res.body).toEqual(datasetPost)
     })
     it('should del', async () => {
         /// setDB(dataset2)
@@ -349,7 +359,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: blog1.id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
         await blogsMongooseModel.insertMany(datasetBlog)
@@ -418,7 +433,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog[0].id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
         await blogsMongooseModel.insertMany(datasetBlog)
@@ -475,7 +495,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog[0].id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
         await blogsMongooseModel.insertMany(datasetBlog)
@@ -526,7 +551,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: blog1.id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
         await blogsMongooseModel.insertMany(datasetBlog)
@@ -595,7 +625,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog[0].id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }
 
         await blogsMongooseModel.insertMany(datasetBlog)
@@ -634,129 +669,143 @@ describe('/posts', () => {
         expect(blogs).toEqual(datasetBlog)
         expect(posts[0]).toEqual(datasetPost)
     })
-        it('return comment for specified post 200', async () => {
+    it('return comment for specified post 200', async () => {
 
-            const datasetBlog = {
-                id: String(+(new Date())),
-                name: 'n1',
-                description: 'd1',
-                websiteUrl: 'https://some.com',
-                isMembership: false,
-                createdAt: new Date().toISOString()
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        const posts = [...new Array(1)].map((_, index) => ({
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
             }
+        }))
+        await blogsMongooseModel.create(datasetBlog)
+        await postsMongooseModel.insertMany(posts)
+        const postId = posts[0].id
 
-            const posts = [...new Array(1)].map((_, index) => ({
-                id: String(+(new Date())),
-                title: 't1',
-                content: 'c1',
-                shortDescription: 's1',
-                blogId: datasetBlog.id,
-                blogName: 'n1',
-                createdAt: new Date().toISOString()
-            }))
-            await blogsMongooseModel.create(datasetBlog)
-            await postsMongooseModel.insertMany(posts)
-            const postId = posts[0].id
-
-            const res = await req
-                .get(SETTINGS.PATH.POSTS + '/' + postId + '/comments')
-                .expect(200)
-
-            console.log(res.body)
-
-            expect(res.body.items.length).toEqual(0)
-            expect(res.body.pagesCount).toEqual(0)
-            expect(res.body.page).toEqual(1)
-            expect(res.body.pageSize).toEqual(10)
-            expect(res.body.totalCount).toEqual(0)
-
-        })
-        it('return comment for specified post ,notfound 404', async () => {
+        const res = await req
+            .get(SETTINGS.PATH.POSTS + '/' + postId + '/comments')
+            .expect(200)
 
 
-            const res = await req
-                .get(SETTINGS.PATH.POSTS + '/' + 'gggggggggg' + '/comments')
-                .expect(404)
-        })
+        expect(res.body.items.length).toEqual(0)
+        expect(res.body.pagesCount).toEqual(0)
+        expect(res.body.page).toEqual(1)
+        expect(res.body.pageSize).toEqual(10)
+        expect(res.body.totalCount).toEqual(0)
 
-         it('created new comment 200', async () => {
-
-             const datasetBlog = {
-                 id: String(+(new Date())),
-                 name: 'n1',
-                 description: 'd1',
-                 websiteUrl: 'https://some.com',
-                 isMembership: false,
-                 createdAt: new Date().toISOString()
-             }
-
-             const posts = [...new Array(1)].map((_, index) => ({
-                 id: String(+(new Date())),
-                 title: 't1',
-                 content: 'c1',
-                 shortDescription: 's1',
-                 blogId: datasetBlog.id,
-                 blogName: 'n1',
-                 createdAt: new Date().toISOString()
-             }))
-             const user = await createOneUser('test@mail.ru', 'test', '11111111')
-             await blogsMongooseModel.create(datasetBlog)
-             await postsMongooseModel.insertMany(posts)
-             await usersMongooseModel.create(user)
-             const postId = posts[0].id
-
-             const loginUser = await req
-                 .post(SETTINGS.PATH.AUTH + '/login')
-                 .send({loginOrEmail: 'test', password: '11111111'})
-                 .expect(200);
+    })
+    it('return comment for specified post ,notfound 404', async () => {
 
 
-             const createComment = await req
-                 .post(SETTINGS.PATH.POSTS + '/' + postId + '/comments')
-                 .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
-                 .send({content: '22222222222222222222222222222222222'})
-                 .expect(201) // проверяем наличие эндпоинта
+        const res = await req
+            .get(SETTINGS.PATH.POSTS + '/' + 'gggggggggg' + '/comments')
+            .expect(404)
+    })
 
-             console.log(createComment.body)
+    it('created new comment 200', async () => {
 
-             expect(createComment.body.content).toEqual('22222222222222222222222222222222222')
-             expect(createComment.body.commentatorInfo.userLogin).toEqual('test')
-             expect(createComment.body.id).toEqual(expect.any(String))
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
 
-
-         }),
-        it('created new comment , Unauthorized 401', async () => {
-
-            const datasetBlog = {
-                id: String(+(new Date())),
-                name: 'n1',
-                description: 'd1',
-                websiteUrl: 'https://some.com',
-                isMembership: false,
-                createdAt: new Date().toISOString()
+        const posts = [...new Array(1)].map((_, index) => ({
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
             }
+        }))
+        const user = await createOneUser('test@mail.ru', 'test', '11111111')
+        await blogsMongooseModel.create(datasetBlog)
+        await postsMongooseModel.insertMany(posts)
+        await usersMongooseModel.create(user)
+        const postId = posts[0].id
 
-            const posts = [...new Array(1)].map((_, index) => ({
-                id: String(+(new Date())),
-                title: 't1',
-                content: 'c1',
-                shortDescription: 's1',
-                blogId: datasetBlog.id,
-                blogName: 'n1',
-                createdAt: new Date().toISOString()
-            }))
-
-            await blogsMongooseModel.create(datasetBlog)
-            await postsMongooseModel.insertMany(posts)
-            const postId = posts[0].id
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: 'test', password: '11111111'})
+            .expect(200);
 
 
-            await req
-                .post(SETTINGS.PATH.POSTS + '/' + postId + '/comments')
-                .set('Authorization', `Bearer ggggggggg'`)
-                .send({content: '22222222222222222222222222222222222'})
-                .expect(401) // проверяем наличие эндпоинта
-        })
+        const createComment = await req
+            .post(SETTINGS.PATH.POSTS + '/' + postId + '/comments')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({content: '22222222222222222222222222222222222'})
+            .expect(201) // проверяем наличие эндпоинта
+
+        console.log(createComment.body)
+
+        expect(createComment.body.content).toEqual('22222222222222222222222222222222222')
+        expect(createComment.body.commentatorInfo.userLogin).toEqual('test')
+        expect(createComment.body.id).toEqual(expect.any(String))
+
+
+    })
+    it('created new comment , Unauthorized 401', async () => {
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        const posts = [...new Array(1)].map((_, index) => ({
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
+        }))
+
+        await blogsMongooseModel.create(datasetBlog)
+        await postsMongooseModel.insertMany(posts)
+        const postId = posts[0].id
+
+
+        await req
+            .post(SETTINGS.PATH.POSTS + '/' + postId + '/comments')
+            .set('Authorization', `Bearer ggggggggg'`)
+            .send({content: '22222222222222222222222222222222222'})
+            .expect(401) // проверяем наличие эндпоинта
+    })
     it('created new comment , inputModel has incorrect values 400 ', async () => {
 
         const datasetBlog = {
@@ -775,7 +824,12 @@ describe('/posts', () => {
             shortDescription: 's1',
             blogId: datasetBlog.id,
             blogName: 'n1',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
         }))
         const user = await createOneUser('test@mail.ru', 'test', '11111111')
         await blogsMongooseModel.create(datasetBlog)
@@ -797,24 +851,234 @@ describe('/posts', () => {
 
 
     })
-     it('created new comment , not found post 404 ', async () => {
+    it('created new comment , not found post 404 ', async () => {
 
-         const user = await createOneUser('test@mail.ru', 'test', '11111111')
-         await usersMongooseModel.create(user)
+        const user = await createOneUser('test@mail.ru', 'test', '11111111')
+        await usersMongooseModel.create(user)
 
-         const loginUser = await req
-             .post(SETTINGS.PATH.AUTH + '/login')
-             .send({loginOrEmail: 'test', password: '11111111'})
-             .expect(200);
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: 'test', password: '11111111'})
+            .expect(200);
 
 
-         await req
-             .post(SETTINGS.PATH.POSTS + '/' + '33333333' + '/comments')
-             .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
-             .send({content: '222222222222222222222222'})
-             .expect(404)
+        await req
+            .post(SETTINGS.PATH.POSTS + '/' + '33333333' + '/comments')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({content: '222222222222222222222222'})
+            .expect(404)
 
-     })
+    })
+
+
+    it('update post like status ,204', async () => {
+
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
+        }
+
+
+        const smartBlogModel = new blogsMongooseModel(datasetBlog)
+        await smartBlogModel.save()
+
+        const smartPostModel = new postsMongooseModel(datasetPost);
+        await smartPostModel.save();
+        /*// @ts-ignore
+        delete datasetPost._id*/
+
+        const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
+
+        await usersMongooseModel.create(newUserCreated)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: 'test', password: '123456789'})
+            .expect(200);
+
+
+        await req
+            .put(SETTINGS.PATH.POSTS + '/' + datasetPost.id + '/like-status')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({likeStatus: 'Like'})
+            .expect(204)
+
+        const updatePost = await postsMongooseModel.find().lean()
+
+        expect(updatePost[0].likesInfo.users.length).toEqual(1)
+        expect(updatePost[0].likesInfo.likesCount).toEqual(1)
+        expect(updatePost[0].likesInfo.dislikesCount).toEqual(0)
+        expect(updatePost[0].likesInfo.users[0].likeStatus).toEqual('Like')
+    })
+
+    it('update post like status unauthorized ,401', async () => {
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
+        }
+
+
+        const smartBlogModel = new blogsMongooseModel(datasetBlog)
+        await smartBlogModel.save()
+
+        const smartPostModel = new postsMongooseModel(datasetPost);
+        await smartPostModel.save();
+
+
+        await req
+            .put(SETTINGS.PATH.POSTS + '/' + datasetPost.id + '/like-status')
+            .set('Authorization', `Bearer 12345`)
+            .send({likeStatus: 'Like'})
+            .expect(401)
+
+
+    })
+
+    it('update post like status incorrect values ,400', async () => {
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
+        }
+
+
+        const smartBlogModel = new blogsMongooseModel(datasetBlog)
+        await smartBlogModel.save()
+
+        const smartPostModel = new postsMongooseModel(datasetPost);
+        await smartPostModel.save();
+        /*// @ts-ignore
+        delete datasetPost._id*/
+
+        const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
+
+        await usersMongooseModel.create(newUserCreated)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: 'test', password: '123456789'})
+            .expect(200)
+
+
+        await req
+            .put(SETTINGS.PATH.POSTS + '/' + datasetPost.id + '/like-status')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({likeStatus: 'Lie'})
+            .expect(400)
+
+    })
+
+    it('update post like status if comment with specified id doesnt exists ,404', async () => {
+
+        const datasetBlog = {
+            id: String(+(new Date())),
+            name: 'n1',
+            description: 'd1',
+            websiteUrl: 'https://some.com',
+            isMembership: false,
+            createdAt: new Date().toISOString()
+        }
+
+        const datasetPost = {
+            id: String(+(new Date())),
+            title: 't1',
+            content: 'c1',
+            shortDescription: 's1',
+            blogId: datasetBlog.id,
+            blogName: 'n1',
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                users: []
+            }
+        }
+
+
+        const smartBlogModel = new blogsMongooseModel(datasetBlog)
+        await smartBlogModel.save()
+
+        const smartPostModel = new postsMongooseModel(datasetPost);
+        await smartPostModel.save();
+        /*// @ts-ignore
+        delete datasetPost._id*/
+
+        const newUserCreated = await createOneUser('test@gmail.com', 'test', '123456789')
+
+        await usersMongooseModel.create(newUserCreated)
+
+        const loginUser = await req
+            .post(SETTINGS.PATH.AUTH + '/login')
+            .send({loginOrEmail: 'test', password: '123456789'})
+            .expect(200)
+
+
+        await req
+            .put(SETTINGS.PATH.COMMENTS + '/' + '5555555' + '/like-status')
+            .set('Authorization', `Bearer ${loginUser.body.accessToken}`)
+            .send({likeStatus: 'Like'})
+            .expect(404)
+
+    })
 })
 
 

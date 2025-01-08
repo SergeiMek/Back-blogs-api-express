@@ -121,9 +121,9 @@ export async function createOneUser(email: string, login: string, password: stri
             expirationData: add(new Date(), {hours: 1}),  //// v   add(new Date(), {hours: 1})
             isConfirmed: false
         },
-        passwordRecovery:{
-            recoveryCode:null,
-            expirationDate:null
+        passwordRecovery: {
+            recoveryCode: null,
+            expirationDate: null
         }
     }
 }
@@ -230,7 +230,12 @@ export async function createComment(data: dataCreateCommentData) {
         shortDescription: 's1',
         blogId: datasetBlog.id,
         blogName: 'n1',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        likesInfo: {
+            likesCount: 0,
+            dislikesCount: 0,
+            users: []
+        }
     }))
     const user = await createOneUser(data.emailUser, data.loginUser, data.passwordUser)
     await blogsMongooseModel.create(datasetBlog)
@@ -304,8 +309,8 @@ export const loginUser = async (data: loginUsertype) => {
         }
 
 
-
-}}
+    }
+}
 
 
 
