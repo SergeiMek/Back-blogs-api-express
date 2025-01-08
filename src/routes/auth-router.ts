@@ -4,7 +4,8 @@ import {authInputType, recoveryPasswordBodyType, registrationDataType} from "../
 import {
     validationAuthInputPost,
     validationConfirmCode,
-    validationEmail, validationRecoveryPassword
+    validationEmail,
+    validationRecoveryPassword
 } from "../midlewares/validations/input/validation-auth-input";
 import {jwtService} from "../application/jwtService";
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
@@ -19,31 +20,25 @@ import {
     postsMongooseModel,
     usersMongooseModel
 } from "../db/mongooseSchema/mongooseSchema";
-import {UsersRepository} from "../repositories/users-repository";
 import {UsersService} from "../domain/users-service";
 import {DevicesService} from "../domain/devices-service";
 import {AuthQueryRepository} from "../repositories/auth-query-repository";
 import {AuthService} from "../domain/auth-service";
-import {authQueryRepository, authService, devicesService, usersService} from "../commposition-root";
-
+import {container} from "../commposition-root";
+import {inject, injectable} from "inversify";
 
 
 export const authRouter = Router({})
 
-
+@injectable()
 export class AuthController {
 
     constructor(
-        protected usersService: UsersService,
-        protected devicesService: DevicesService,
-        protected authQueryRepository: AuthQueryRepository,
-        protected authService: AuthService,
-
+        @inject(UsersService) protected usersService: UsersService,
+        @inject(DevicesService) protected devicesService: DevicesService,
+        @inject(AuthQueryRepository) protected authQueryRepository: AuthQueryRepository,
+        @inject(AuthService) protected authService: AuthService,
     ) {
-        //this.usersService = new UsersService()
-        //this.devicesService = new DevicesService()
-        //this.authQueryRepository = new AuthQueryRepository()
-        //this.authService = new AuthService()
     }
 
     async loginUser(req: Request<{}, {}, authInputType>, res: Response) {
@@ -279,8 +274,8 @@ export class AuthController {
     }
 }
 
-const authControllerInstance = new AuthController(usersService, devicesService, authQueryRepository, authService)
-
+//const authControllerInstance = new AuthController(usersService, devicesService, authQueryRepository, authService)
+const authControllerInstance = container.resolve(AuthController)
 
 authRouter.post('/login', rateLimiter, validationAuthInputPost, authControllerInstance.loginUser.bind(authControllerInstance))
 authRouter.post('/logout', validationRefreshToken, authControllerInstance.logoutUser.bind(authControllerInstance))

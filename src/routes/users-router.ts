@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import {Request, Response, Router} from "express";
 import {UsersService} from "../domain/users-service";
 import {UsersQueryRepository} from "../repositories/users-query-repository";
@@ -5,21 +6,20 @@ import {userInputType, usersEntityType, usersOutputType, usersQueryType} from ".
 import {paginationUsersQueries} from "../helpers/paginations_values";
 import {HTTP_STATUSES} from "../settings";
 import {authBasic} from "../midlewares/auth/auth-basic";
-
 import {validationUsersInputPost} from "../midlewares/validations/input/validation-users-input";
-import {usersQueryRepository, usersService} from "../commposition-root";
+import {container} from "../commposition-root";
+import {inject, injectable} from "inversify";
 
 
-export const usersRouter = Router({})
-
-
+@injectable()
 export class UsersController {
 
 
     constructor(
-        protected usersService: UsersService,
-        protected usersQueryRepository: UsersQueryRepository
-       ) {}
+        @inject(UsersService) protected usersService: UsersService,
+        @inject(UsersQueryRepository) protected usersQueryRepository: UsersQueryRepository
+    ) {
+    }
 
 
     async getAllUsers(req: Request<{}, {}, {}, usersQueryType>, res: Response<usersOutputType>) {
@@ -62,7 +62,9 @@ export class UsersController {
 }
 
 
-export const userControllerInstance = new UsersController(usersService, usersQueryRepository)
+export const usersRouter = Router({})
+const userControllerInstance = container.resolve(UsersController)
+
 
 usersRouter.get('/', authBasic, userControllerInstance.getAllUsers.bind(userControllerInstance))
 usersRouter.post('/', authBasic, validationUsersInputPost, userControllerInstance.createdUser.bind(userControllerInstance))

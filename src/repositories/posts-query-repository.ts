@@ -1,11 +1,17 @@
 import {findPostData, postOutputType} from "../types/postType";
-import {outputPostType, postDBType, postType} from "../db/dbType";
+import {outputPostType, postDBType} from "../db/dbType";
 import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 import {ObjectId} from "mongodb";
-import {postsRepository} from "../commposition-root";
 
+import {inject, injectable} from "inversify";
+import {PostsRepository} from "./posts-repository";
 
+@injectable()
 export class PostsQueryRepository {
+    constructor(@inject(PostsRepository) protected postsRepository: PostsRepository) {
+    }
+
+
     async getAllPosts(data: findPostData): Promise<postOutputType> {
         let filter: any = {}
 
@@ -35,7 +41,7 @@ export class PostsQueryRepository {
         }
         let status
         if (userId) {
-            status = await postsRepository.findUserLikeStatus(id, userId)
+            status = await this.postsRepository.findUserLikeStatus(id, userId)
         }
         const likesArray = post.likesInfo.users.filter((p) => p.likeStatus === "Like")
             .sort((a, b) => -a.addedAt.localeCompare(b.addedAt))
@@ -70,7 +76,7 @@ export class PostsQueryRepository {
                 let status
 
                 if (userId) {
-                    status = await postsRepository.findUserLikeStatus(p.id, userId)
+                    status = await this.postsRepository.findUserLikeStatus(p.id, userId)
                 }
                 const likesArray = p.likesInfo.users.filter((p) => p.likeStatus === "Like")
                     .sort((a, b) => -a.addedAt.localeCompare(b.addedAt))

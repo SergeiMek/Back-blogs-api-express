@@ -15,26 +15,23 @@ import {PostsService} from "../domain/posts-service";
 import {PostsQueryRepository} from "../repositories/posts-query-repository";
 import {CommentsQueryRepository} from "../repositories/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
-import {
-    commentsQueryRepository, commentsService,
-    postsQueryRepository,
-    postsService
-} from "../commposition-root";
+import {container} from "../commposition-root";
 import {tokenParser} from "../midlewares/auth/tokenParser";
 import {outputPostType} from "../db/dbType";
+import {inject, injectable} from "inversify";
 
 
 export const postsRouter = Router({})
 
-
+@injectable()
 export class PostsController {
 
 
     constructor(
-        protected postsService: PostsService,
-        protected postsQueryRepository: PostsQueryRepository,
-        protected commentsQueryRepository: CommentsQueryRepository,
-        protected commentsService: CommentsService
+        @inject(PostsService) protected postsService: PostsService,
+        @inject(PostsQueryRepository) protected postsQueryRepository: PostsQueryRepository,
+        @inject(CommentsQueryRepository) protected commentsQueryRepository: CommentsQueryRepository,
+        @inject(CommentsService) protected commentsService: CommentsService
     ) {
     }
 
@@ -103,7 +100,7 @@ export class PostsController {
             likeStatus: req.body.likeStatus
         }
 
-        const isUpdatedStatus = await postsService.updateLikesStatus(likeStatusData)
+        const isUpdatedStatus = await this.postsService.updateLikesStatus(likeStatusData)
 
         if (isUpdatedStatus.status === 2) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUNT_404)
@@ -158,7 +155,8 @@ export class PostsController {
 }
 
 
-const postsControllerInstance = new PostsController(postsService, postsQueryRepository, commentsQueryRepository, commentsService)
+//const postsControllerInstance = new PostsController(postsService, postsQueryRepository, commentsQueryRepository, commentsService)
+const postsControllerInstance = container.resolve(PostsController)
 
 
 // @ts-ignore

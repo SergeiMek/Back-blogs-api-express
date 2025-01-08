@@ -2,7 +2,9 @@ import {commentsDBType} from "../db/dbType";
 import {CommentsOutputType, findCommentsData, outputCreateCommentData} from "../types/commentsType";
 import {ObjectId} from "mongodb";
 import {commentsMongooseModel, postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
-import {commentsRepository} from "../commposition-root";
+import { injectable } from "inversify";
+import {inject} from "inversify";
+import {CommentsRepository} from "./comments-repository";
 
 
 enum ResultStatus {
@@ -17,8 +19,12 @@ type Result<T> = {
     data: T
 }
 
-
+@injectable()
 export class CommentsQueryRepository {
+
+    constructor( @inject(CommentsRepository)  protected commentsRepository: CommentsRepository) {
+    }
+
     async getAllComments(data: findCommentsData): Promise<Result<CommentsOutputType | null>> {
 
         const post = await postsMongooseModel.findOne({id: data.postId})
@@ -62,7 +68,7 @@ export class CommentsQueryRepository {
 
         if(userId){
 
-            status = await commentsRepository.findUserLikeStatus(id,userId) as string
+            status = await this.commentsRepository.findUserLikeStatus(id,userId) as string
         }
 
 
@@ -91,7 +97,7 @@ export class CommentsQueryRepository {
                 let status
 
                 if (userId) {
-                    status = await commentsRepository.findUserLikeStatus(
+                    status = await this.commentsRepository.findUserLikeStatus(
                         comment._id.toString(),
                         userId
                     );

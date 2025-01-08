@@ -10,27 +10,22 @@ import {PostsService} from "../domain/posts-service";
 import {PostsQueryRepository} from "../repositories/posts-query-repository";
 import {BlogsService} from "../domain/blogs-service";
 import {BlogQueryRepository} from "../repositories/blog-query-repository";
-import {
-    blogsQueryRepository,
-    blogsService,
-    postsQueryRepository,
-    postsService
-} from "../commposition-root";
+import {container} from "../commposition-root";
 import {outputPostType} from "../db/dbType";
 import {tokenParser} from "../midlewares/auth/tokenParser";
+import {inject, injectable} from "inversify";
 
 
 export const blogsRouter = Router({})
 
-
+@injectable()
 export class BlogsController {
 
-
     constructor(
-        protected blogsQueryRepository: BlogQueryRepository,
-        protected postsService: PostsService,
-        protected postsQueryRepository: PostsQueryRepository,
-        protected blogsService: BlogsService
+        @inject(BlogQueryRepository) protected blogsQueryRepository: BlogQueryRepository,
+        @inject(PostsService) protected postsService: PostsService,
+        @inject(PostsQueryRepository) protected postsQueryRepository: PostsQueryRepository,
+        @inject(BlogsService) protected blogsService: BlogsService
     ) {
     }
 
@@ -114,7 +109,8 @@ export class BlogsController {
 }
 
 
-const blogsControllerInstance = new BlogsController(blogsQueryRepository, postsService, postsQueryRepository, blogsService)
+//const blogsControllerInstance = new BlogsController(blogsQueryRepository, postsService, postsQueryRepository, blogsService)
+const blogsControllerInstance = container.resolve(BlogsController)
 
 
 blogsRouter.get('/', blogsControllerInstance.getAllBlogs.bind(blogsControllerInstance))

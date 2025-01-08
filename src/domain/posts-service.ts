@@ -1,11 +1,10 @@
 import {PostDBModel, postsInoutData, updateLikesDataType} from "../types/postType";
-import {likeStatus, outputPostType, postDBType, postType} from "../db/dbType";
+import {outputPostType} from "../db/dbType";
 import {PostsRepository} from "../repositories/posts-repository";
 import {BlogsRepository} from "../repositories/blogs-repository";
 import {ObjectId} from "mongodb";
-import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
-import {postsRepository} from "../commposition-root";
 import {UsersRepository} from "../repositories/users-repository";
+import {inject, injectable} from "inversify";
 
 
 enum ResultStatus {
@@ -22,24 +21,18 @@ type Result<T> = {
     data: T
 }
 
-
+@injectable()
 export class PostsService {
     constructor(
-        protected postsRepository: PostsRepository,
-        protected blogsRepository: BlogsRepository,
-        protected usersRepository: UsersRepository
+        @inject(PostsRepository)   protected postsRepository: PostsRepository,
+        @inject(BlogsRepository)  protected blogsRepository: BlogsRepository,
+        @inject(UsersRepository) protected usersRepository: UsersRepository
     ) {
     }
 
     async createdPost(newPostCreatedData: postsInoutData): Promise<outputPostType> {
         const blog = await this.blogsRepository.findBlogById(newPostCreatedData.blogId)
 
-        /* const newPost = {
-             id: String(+(new Date())),
-             createdAt: new Date().toISOString(),
-             blogName: blog!.name,
-             ...newPostCreatedData
-         }*/
 
         const newPost = new PostDBModel(new ObjectId(),
             String(+(new Date())),
@@ -111,7 +104,7 @@ export class PostsService {
         let likesCount = foundPost.likesInfo.likesCount
         let dislikesCount = foundPost.likesInfo.dislikesCount
 
-        const foundUser = await postsRepository.findUserInLikesInfo(data.postId, data.userId)
+        const foundUser = await this.postsRepository.findUserInLikesInfo(data.postId, data.userId)
 
         const user = await this.usersRepository.findUserById(data.userId)
         const login = user!.accountData.login

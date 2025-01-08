@@ -12,6 +12,8 @@ import {add} from "date-fns";
 import {emailManager} from "../adapters/email-manager";
 import {v4 as uuidv4} from 'uuid';
 import {UsersRepository} from "../repositories/users-repository";
+import { injectable } from "inversify";
+import {inject} from "inversify";
 
 
 enum ResultStatus {
@@ -31,10 +33,10 @@ type Result<T> = {
     data: T
 }
 
-
+@injectable()
 export class AuthService {
 
-    constructor(protected usersRepository: UsersRepository) {}
+    constructor(@inject(UsersRepository) protected usersRepository: UsersRepository) {}
     async registerUser(registerData: registrationDataType): Promise<Result<null>> {
 
         const findUserByLogin = await this.usersRepository.findByLoginOrEmail(registerData.login)

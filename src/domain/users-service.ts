@@ -4,11 +4,12 @@ import bcrypt from "bcrypt"
 import {ObjectId} from "mongodb";
 import {UsersRepository} from "../repositories/users-repository";
 import {AccountData, AuthDBTypeClass, EmailConfirmation, PasswordRecovery} from "../types/authType";
+import {inject, injectable} from "inversify";
 
-
+@injectable()
 export class UsersService {
 
-    constructor(protected usersRepository: UsersRepository ) {}
+    constructor(@inject(UsersRepository) protected usersRepository: UsersRepository ) {}
 
     async createdUser(userCreatedData: userInputType): Promise<string> {
 

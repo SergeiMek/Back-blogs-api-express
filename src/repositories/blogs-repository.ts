@@ -2,8 +2,9 @@ import {blogInputData, blogInputPostDat} from "../types/blogType";
 import {blogsType} from "../db/dbType";
 import {DeleteResult, UpdateResult} from "mongodb";
 import {blogsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import { injectable } from "inversify";
 
-
+@injectable()
 export class BlogsRepository {
     async createdBlog(newBlogCreatedData: blogInputPostDat): Promise<blogsType> {
 

@@ -4,13 +4,14 @@ import {
     createCommentType,
     LikesInfo,
     outputCreateCommentData,
-    updateCommentType, updateLikeStatusType
+    updateCommentType,
+    updateLikeStatusType
 } from "../types/commentsType";
 import {ObjectId} from "mongodb";
 import {UsersRepository} from "../repositories/users-repository";
 import {PostsRepository} from "../repositories/posts-repository";
 import {CommentsRepository} from "../repositories/comments-repository";
-import {likeStatus} from "../db/dbType";
+import {inject, injectable} from "inversify";
 
 
 enum ResultStatus {
@@ -27,14 +28,12 @@ type Result<T> = {
     data: T
 }
 
-
+@injectable()
 export class CommentsService {
-
-
     constructor(
-        protected usersRepository: UsersRepository,
-        protected postsRepository: PostsRepository,
-        protected commentsRepository: CommentsRepository
+      @inject(UsersRepository)  protected usersRepository: UsersRepository,
+      @inject(PostsRepository) protected postsRepository: PostsRepository,
+      @inject(CommentsRepository)  protected commentsRepository: CommentsRepository
     ) {
     }
 

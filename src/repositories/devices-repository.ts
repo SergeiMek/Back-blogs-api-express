@@ -1,8 +1,10 @@
 import {deviceDBType} from "../db/dbType";
 import {ObjectId} from "mongodb";
 import {devicesMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import { injectable } from "inversify";
 
 
+@injectable()
 export class DevicesRepository {
     async createDevice(deviceDara: deviceDBType): Promise<ObjectId> {
         const result = await devicesMongooseModel.create(deviceDara)

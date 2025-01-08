@@ -2,8 +2,9 @@ import {ObjectId} from "mongodb";
 
 import {commentsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
 import {commentsDBType} from "../db/dbType";
+import { injectable } from "inversify";
 
-
+@injectable()
 export class CommentsRepository {
     async createComments(newCommentData: commentsDBType): Promise<ObjectId> {
         const result = await commentsMongooseModel.create(newCommentData)

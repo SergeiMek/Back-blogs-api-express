@@ -2,8 +2,9 @@ import {usersDBType} from "../db/dbType";
 import {usersEntityType, usersOutputType, usersQueryOutputType} from "../types/usersType";
 import {ObjectId} from "mongodb";
 import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import { injectable } from "inversify";
 
-
+@injectable()
 export class UsersQueryRepository {
     async getAllUsers(data: usersQueryOutputType): Promise<usersOutputType> {
         let filter: any = {}

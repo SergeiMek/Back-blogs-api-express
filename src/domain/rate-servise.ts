@@ -1,15 +1,14 @@
 import {ObjectId} from "mongodb";
 import {RareLimitDBClassType} from "../types/rateLimitType";
 import {RateRepository} from "../repositories/rate-repository";
+import {inject, injectable} from "inversify";
 
-
+@injectable()
 export class RateService {
 
-    rateRepository:RateRepository
 
-    constructor() {
-        this.rateRepository = new RateRepository()
-    }
+
+    constructor(@inject(RateRepository) protected rateRepository:RateRepository) {}
 
     async createRateLimit(url: string, ip: string, date: number): Promise<boolean> {
 

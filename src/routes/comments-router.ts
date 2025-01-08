@@ -7,20 +7,21 @@ import {
 import {authMiddleware} from "../midlewares/auth/authMiddlewareJWT";
 import {CommentsQueryRepository} from "../repositories/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
-import {commentsQueryRepository, commentsService} from "../commposition-root";
+import {container} from "../commposition-root";
 import {outputCreateCommentData} from "../types/commentsType";
 import {tokenParser} from "../midlewares/auth/tokenParser";
+import {inject, injectable} from "inversify";
 
 
 export const commentsRouter = Router({})
 
-
+@injectable()
 export class CommentsController {
 
 
     constructor(
-        protected commentsQueryRepository: CommentsQueryRepository,
-        protected commentsService: CommentsService
+        @inject(CommentsQueryRepository) protected commentsQueryRepository: CommentsQueryRepository,
+        @inject(CommentsService)  protected commentsService: CommentsService
     ) {
     }
 
@@ -99,8 +100,8 @@ export class CommentsController {
     }
 }
 
-const commentsControllerInstance = new CommentsController(commentsQueryRepository, commentsService)
-
+//const commentsControllerInstance = new CommentsController(commentsQueryRepository, commentsService)
+const commentsControllerInstance = container.resolve(CommentsController)
 
 commentsRouter.get('/:id', tokenParser, commentsControllerInstance.getCommentById.bind(commentsControllerInstance))
 commentsRouter.put('/:commentId', authMiddleware, validationCommentsInputPost, commentsControllerInstance.updateComment.bind(commentsControllerInstance))

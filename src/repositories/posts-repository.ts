@@ -2,8 +2,9 @@ import {postsInoutData, pushUserInLikeType} from "../types/postType";
 import {postDBType, postType} from "../db/dbType";
 import {DeleteResult, ObjectId, UpdateResult} from "mongodb";
 import {postsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import { injectable } from "inversify";
 
-
+@injectable()
 export class PostsRepository {
     async createdPost(newPostCreatedData: postType): Promise<postType> {
         const smartUserModel = new postsMongooseModel(newPostCreatedData);

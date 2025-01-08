@@ -1,8 +1,9 @@
 import {blogsDBType, blogsType} from "../db/dbType";
 import {blogDataFindType, blogQueryOutputType} from "../types/blogType";
 import {blogsMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import { injectable } from "inversify";
 
-
+@injectable()
 export class BlogQueryRepository {
     async getAllBlogs(queryData: blogDataFindType): Promise<blogQueryOutputType> {
 

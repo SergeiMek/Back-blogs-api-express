@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {jwtService} from "../../application/jwtService";
 import {ObjectId} from "mongodb";
-import {usersService} from "../../commposition-root";
+import {usersMongooseModel} from "../../db/mongooseSchema/mongooseSchema";
 
 
 
@@ -12,7 +12,7 @@ export const tokenParser = async (req: Request, res: Response, next: NextFunctio
     if (accessToken) {
         const accessTokenObj = await jwtService.verifyToken(accessToken)
         const userId = new ObjectId(accessTokenObj?.userId)
-            req.user = await usersService.findUserById(userId)
+            req.user = await usersMongooseModel.findOne({_id: userId})
     }
     next()
 

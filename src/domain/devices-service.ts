@@ -3,6 +3,7 @@ import {ObjectId} from "mongodb";
 import {jwtService} from "../application/jwtService";
 import {deviseDBClassType} from "../types/diviceType";
 import {DevicesRepository} from "../repositories/devices-repository";
+import {inject, injectable} from "inversify";
 
 
 enum ResultStatus {
@@ -19,10 +20,10 @@ type Result<T> = {
     data: T
 }
 
-
+@injectable()
 export class DevicesService {
 
-    constructor(protected devicesRepository: DevicesRepository) {}
+    constructor(@inject(DevicesRepository) protected devicesRepository: DevicesRepository) {}
 
     async createDevice(newRefreshToken: string, ip: string, userAgent: string) {
         const newRefreshTokenObj = await jwtService.verifyToken(newRefreshToken);

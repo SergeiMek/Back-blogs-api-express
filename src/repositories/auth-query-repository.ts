@@ -1,8 +1,9 @@
 import {ObjectId} from "mongodb";
 import {OutputAutData} from "../types/authType";
 import {usersMongooseModel} from "../db/mongooseSchema/mongooseSchema";
+import { injectable } from "inversify";
 
-
+@injectable()
 export class AuthQueryRepository {
     async getUserData(userId: ObjectId): Promise<OutputAutData | null> {
         const user = await usersMongooseModel.findOne({_id: new ObjectId(userId)})
